@@ -13,6 +13,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     const res = await loginApi(credentials);
     const { token, role, nom, prenom, email } = res.data;
+    
+    // Affiche le token dans la console du navigateur comme demandé
+    console.log("=== TOKEN RECU DU BACKEND ===");
+    console.log(token);
+    console.log("=============================");
+
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify({ nom, prenom, email, role }));
     setUser({ nom, prenom, email, role });

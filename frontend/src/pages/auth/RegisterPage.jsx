@@ -5,16 +5,33 @@ import { useAuth } from '../../context/AuthContext';
 export default function RegisterPage() {
   const { register } = useAuth();
   const [form, setForm] = useState({
-    nom: '', prenom: '', email: '', motDePasse: '', role: 'ROLE_STUDENT',
+    nom: '', prenom: '', email: '', motDePasse: '', confirmationMotDePasse: '', role: 'ROLE_STUDENT',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const isEmailTouched = form.email.length > 0;
+  const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
+  const emailInvalid = isEmailTouched && !isEmailFormatValid;
+  const emailValid = isEmailTouched && isEmailFormatValid;
+
+  const isPasswordTouched = form.motDePasse.length > 0;
+  const passwordInvalid = isPasswordTouched && form.motDePasse.length < 8;
+  const passwordValid = isPasswordTouched && !passwordInvalid;
+
+  const isConfirmTouched = form.confirmationMotDePasse.length > 0;
+  const confirmInvalid = isConfirmTouched && form.motDePasse !== form.confirmationMotDePasse;
+  const confirmValid = isConfirmTouched && form.motDePasse === form.confirmationMotDePasse && passwordValid;
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.motDePasse !== form.confirmationMotDePasse) {
+      setError('Les mots de passe ne correspondent pas');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
@@ -27,90 +44,91 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-md w-full max-w-md p-8">
+    <div className="min-vh-100 bg-light d-flex align-items-center justify-content-center px-3 py-5">
+      <div className="bg-white rounded shadow-sm w-100 p-4 p-md-5 position-relative" style={{ maxWidth: '500px' }}>
 
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>
-          <p className="text-gray-500 mt-1 text-sm">Rejoignez la plateforme E-Learning</p>
+        <div className="mb-3 text-start">
+          <Link to="/" className="text-decoration-none text-secondary d-inline-flex align-items-center gap-1">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span className="small fw-medium">Accueil</span>
+          </Link>
+        </div>
+
+        <div className="text-center mb-4">
+          <h1 className="h4 fw-bold text-dark">Créer un compte</h1>
+          <p className="text-secondary small mt-1">Rejoignez la plateforme E-Learning</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm
-                          rounded-lg px-4 py-3 mb-5">
+          <div className="alert alert-danger mb-4" role="alert">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+        <form onSubmit={handleSubmit}>
+          <div className="row g-3 mb-3">
+            <div className="col-sm-6">
+              <label className="form-label small fw-medium">Prénom</label>
               <input
                 type="text" name="prenom" value={form.prenom}
                 onChange={handleChange} required placeholder="Prénom"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5
-                           text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="form-control"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+            <div className="col-sm-6">
+              <label className="form-label small fw-medium">Nom</label>
               <input
                 type="text" name="nom" value={form.nom}
                 onChange={handleChange} required placeholder="Nom"
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5
-                           text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="form-control"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <div className="mb-3">
+            <label className="form-label small fw-medium">Email</label>
             <input
               type="email" name="email" value={form.email}
               onChange={handleChange} required placeholder="vous@email.com"
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5
-                         text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className={`form-control ${emailInvalid ? 'is-invalid' : ''} ${emailValid ? 'is-valid' : ''}`}
             />
+            {emailInvalid && <div className="invalid-feedback">Format d'email invalide</div>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+          <div className="mb-3">
+            <label className="form-label small fw-medium">Mot de passe</label>
             <input
               type="password" name="motDePasse" value={form.motDePasse}
               onChange={handleChange} required placeholder="Minimum 8 caractères"
               minLength={8}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5
-                         text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className={`form-control ${passwordInvalid ? 'is-invalid' : ''} ${passwordValid ? 'is-valid' : ''}`}
             />
+            {passwordInvalid && <div className="invalid-feedback">Code faible : minimum 8 caractères requis</div>}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Je suis</label>
-            <select
-              name="role" value={form.role} onChange={handleChange}
-              className="w-full border border-gray-300 rounded-lg px-4 py-2.5
-                         text-sm focus:outline-none focus:ring-2 focus:ring-blue-500
-                         bg-white transition"
-            >
-              <option value="ROLE_STUDENT">Étudiant</option>
-              <option value="ROLE_TEACHER">Professeur</option>
-            </select>
+          <div className="mb-4">
+            <label className="form-label small fw-medium">Confirmer le mot de passe</label>
+            <input
+              type="password" name="confirmationMotDePasse" value={form.confirmationMotDePasse}
+              onChange={handleChange} required placeholder="Confirmez votre mot de passe"
+              minLength={8}
+              className={`form-control ${confirmInvalid ? 'is-invalid' : ''} ${confirmValid ? 'is-valid' : ''}`}
+            />
+            {confirmInvalid && <div className="invalid-feedback">Les mots de passe ne correspondent pas</div>}
           </div>
-
           <button
             type="submit" disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400
-                       text-white font-medium py-2.5 rounded-lg text-sm
-                       transition duration-200 mt-2"
+            className="btn btn-primary w-100 py-2"
           >
             {loading ? 'Inscription...' : 'Créer mon compte'}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-secondary small mt-4 mb-0">
           Déjà un compte ?{' '}
-          <Link to="/login" className="text-blue-600 hover:underline font-medium">
+          <Link to="/login" className="text-primary text-decoration-none fw-medium">
             Se connecter
           </Link>
         </p>
