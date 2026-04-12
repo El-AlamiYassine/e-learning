@@ -1,12 +1,21 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', motDePasse: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'ROLE_ADMIN') navigate('/admin/dashboard');
+      else if (user.role === 'ROLE_TEACHER') navigate('/teacher/dashboard');
+      else navigate('/student/dashboard');
+    }
+  }, [user, navigate]);
 
   const isEmailTouched = form.email.length > 0;
   const isEmailFormatValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);

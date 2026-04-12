@@ -7,6 +7,24 @@ import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
 import NotFoundPage from '../pages/NotFoundPage';
 import StudentLayout from '../pages/student/StudentLayout';
 import DashboardOverview from '../pages/student/DashboardOverview';
+import AdminLayout from '../pages/admin/AdminLayout';
+import AdminDashboardOverview from '../pages/admin/DashboardOverview';
+import TeacherLayout from '../pages/teacher/TeacherLayout';
+import TeacherDashboardOverview from '../pages/teacher/DashboardOverview';
+import StudentCoursesPage from '../pages/student/StudentCoursesPage';
+import StudentCalendarPage from '../pages/student/StudentCalendarPage';
+import StudentCertificatesPage from '../pages/student/StudentCertificatesPage';
+import TeacherCoursesPage from '../pages/teacher/TeacherCoursesPage';
+import TeacherStudentsPage from '../pages/teacher/TeacherStudentsPage';
+import TeacherAnalyticsPage from '../pages/teacher/TeacherAnalyticsPage';
+import ManageUsersPage from '../pages/admin/ManageUsersPage';
+import AddUserPage from '../pages/admin/AddUserPage';
+import ManageCoursesPage from '../pages/admin/ManageCoursesPage';
+import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
+
+import { useState, useEffect } from 'react';
+import MaintenancePage from '../pages/public/MaintenancePage';
+import { checkPublicMaintenance } from '../api/adminApi';
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user } = useAuth();
@@ -16,6 +34,35 @@ const ProtectedRoute = ({ children, roles }) => {
 };
 
 export default function AppRouter() {
+  const { user } = useAuth();
+  const [isMaintenance, setIsMaintenance] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      try {
+        const res = await checkPublicMaintenance();
+        setIsMaintenance(res.data.maintenanceMode);
+      } catch (err) {
+        console.error('Erreur maintenance check', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkMaintenance();
+  }, []);
+
+  if (loading) return null; // Ou un spinner global
+
+  // Si maintenance active ET l'utilisateur n'est pas ADMIN
+  if (isMaintenance && user?.role !== 'ROLE_ADMIN') {
+    return (
+      <Routes>
+        <Route path="*" element={<MaintenancePage />} />
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
@@ -30,25 +77,39 @@ export default function AppRouter() {
         </ProtectedRoute>
       }>
         <Route index element={<DashboardOverview />} />
-        {/* Placeholder for other routes */}
-        <Route path="courses" element={<div className="p-4">Mes cours... (à venir)</div>} />
-        <Route path="calendar" element={<div className="p-4">Calendrier... (à venir)</div>} />
-        <Route path="certificates" element={<div className="p-4">Certificats... (à venir)</div>} />
+        <Route path="courses" element={<StudentCoursesPage />} />
+        <Route path="calendar" element={<StudentCalendarPage />} />
+        <Route path="certificates" element={<StudentCertificatesPage />} />
       </Route>
 
-      {/* Routes prof — à compléter */}
-      <Route path="/teacher/*" element={
+      {/* Routes prof */}
+      <Route path="/teacher" element={
         <ProtectedRoute roles={['ROLE_TEACHER', 'ROLE_ADMIN']}>
-          <div>Dashboard Prof (à venir)</div>
+          <TeacherLayout />
         </ProtectedRoute>
-      }/>
+      }>
+        <Route path="dashboard" element={<TeacherDashboardOverview />} />
+        <Route path="courses" element={<TeacherCoursesPage />} />
+        <Route path="students" element={<TeacherStudentsPage />} />
+        <Route path="analytics" element={<TeacherAnalyticsPage />} />
+        {/* Redirect /teacher to /teacher/dashboard */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
 
-      {/* Routes admin — à compléter */}
-      <Route path="/admin/*" element={
+      {/* Routes admin */}
+      <Route path="/admin" element={
         <ProtectedRoute roles={['ROLE_ADMIN']}>
-          <div>Dashboard Admin (à venir)</div>
+          <AdminLayout />
         </ProtectedRoute>
-      }/>
+      }>
+        <Route path="dashboard" element={<AdminDashboardOverview />} />
+        <Route path="users" element={<ManageUsersPage />} />
+        <Route path="users/add" element={<AddUserPage />} />
+        <Route path="courses" element={<ManageCoursesPage />} />
+        <Route path="settings" element={<AdminSettingsPage />} />
+        {/* Redirect /admin to /admin/dashboard */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
