@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface CourseRepository extends JpaRepository<Course, Long> {
     List<Course> findByStatut(StatutCours statut);
+    List<Course> findByFormateurEmail(String email);
+    long countByFormateurEmail(String email);
 }

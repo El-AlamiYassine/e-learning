@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getCategories, createCourse } from '../../api/teacherApi';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getCategories, getCourse, updateCourse } from '../../api/teacherApi';
 
-export default function CreateCoursePage() {
+export default function EditCoursePage() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     titre: '',
     description: '',
@@ -15,16 +17,29 @@ export default function CreateCoursePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const res = await getCategories();
-        setCategories(res.data);
+        const [catRes, courseRes] = await Promise.all([
+          getCategories(),
+          getCourse(id)
+        ]);
+        setCategories(catRes.data);
+        const course = courseRes.data;
+        setFormData({
+          titre: course.titre,
+          description: course.description,
+          imageUrl: course.imageUrl || '',
+          categoryId: course.categorie?.id || ''
+        });
       } catch (err) {
-        console.error('Erreur chargement catégories', err);
+        console.error('Erreur chargement données', err);
+        setError('Impossible de charger les détails du cours.');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,7 +48,7 @@ export default function CreateCoursePage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
     setError('');
 
     try {
@@ -41,14 +56,16 @@ export default function CreateCoursePage() {
         ...formData,
         categoryId: formData.categoryId === '' ? null : formData.categoryId
       };
-      await createCourse(dataToSend);
+      await updateCourse(id, dataToSend);
       navigate('/teacher/courses');
     } catch (err) {
-      setError(err.response?.data?.message || 'Une erreur est survenue lors de la création du cours.');
+      setError(err.response?.data?.message || 'Une erreur est survenue lors de la mise à jour du cours.');
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (loading) return <div className="p-5 text-center">Chargement du cours...</div>;
 
   return (
     <div className="container-fluid py-4">
@@ -59,7 +76,7 @@ export default function CreateCoursePage() {
                <button onClick={() => navigate(-1)} className="btn btn-light rounded-circle p-2 d-flex">
                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
                </button>
-               <h2 className="fw-bold mb-0 text-primary">Créer un nouveau cours</h2>
+               <h2 className="fw-bold mb-0 text-primary">Modifier le cours</h2>
             </div>
 
             {error && (
@@ -75,7 +92,6 @@ export default function CreateCoursePage() {
                   type="text"
                   name="titre"
                   className="form-control form-control-lg bg-light border-0"
-                  placeholder="Ex: Maîtriser React de A à Z"
                   required
                   value={formData.titre}
                   onChange={handleChange}
@@ -104,7 +120,6 @@ export default function CreateCoursePage() {
                   type="url"
                   name="imageUrl"
                   className="form-control form-control-lg bg-light border-0"
-                  placeholder="https://images.unsplash.com/..."
                   value={formData.imageUrl}
                   onChange={handleChange}
                 />
@@ -116,7 +131,6 @@ export default function CreateCoursePage() {
                   name="description"
                   className="form-control bg-light border-0"
                   rows="6"
-                  placeholder="Décrivez votre cours en quelques paragraphes..."
                   required
                   value={formData.description}
                   onChange={handleChange}
@@ -132,16 +146,16 @@ export default function CreateCoursePage() {
 
               <div className="col-12 mt-5">
                 <div className="d-grid gap-3 d-md-flex justify-content-md-end">
-                  <button type="button" onClick={() => navigate(-1)} className="btn btn-light px-5 py-3 fw-bold rounded-pill">Annuler</button>
+                  <button type="button" onClick={() => navigate('/teacher/courses')} className="btn btn-light px-5 py-3 fw-bold rounded-pill">Annuler</button>
                   <button 
                     type="submit" 
                     className="btn btn-primary px-5 py-3 fw-bold rounded-pill shadow-sm"
-                    disabled={loading}
+                    disabled={saving}
                   >
-                    {loading ? (
+                    {saving ? (
                       <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     ) : null}
-                    {loading ? 'Création en cours...' : 'Publier le cours'}
+                    {saving ? 'Mise à jour...' : 'Enregistrer les modifications'}
                   </button>
                 </div>
               </div>

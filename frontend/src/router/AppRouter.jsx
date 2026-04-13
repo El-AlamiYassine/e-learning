@@ -17,6 +17,9 @@ import StudentCertificatesPage from '../pages/student/StudentCertificatesPage';
 import TeacherCoursesPage from '../pages/teacher/TeacherCoursesPage';
 import TeacherStudentsPage from '../pages/teacher/TeacherStudentsPage';
 import TeacherAnalyticsPage from '../pages/teacher/TeacherAnalyticsPage';
+import CreateCoursePage from '../pages/teacher/CreateCoursePage';
+import EditCoursePage from '../pages/teacher/EditCoursePage';
+import ManageLessonsPage from '../pages/teacher/ManageLessonsPage';
 import ManageUsersPage from '../pages/admin/ManageUsersPage';
 import AddUserPage from '../pages/admin/AddUserPage';
 import ManageCoursesPage from '../pages/admin/ManageCoursesPage';
@@ -58,6 +61,7 @@ export default function AppRouter() {
   if (isMaintenance && user?.role !== 'ROLE_ADMIN') {
     return (
       <Routes>
+        <Route path="/login" element={<LoginPage />} />
         <Route path="*" element={<MaintenancePage />} />
       </Routes>
     );
@@ -90,6 +94,9 @@ export default function AppRouter() {
       }>
         <Route path="dashboard" element={<TeacherDashboardOverview />} />
         <Route path="courses" element={<TeacherCoursesPage />} />
+        <Route path="courses/create" element={<CreateCoursePage />} />
+        <Route path="courses/:id/edit" element={<EditCoursePage />} />
+        <Route path="courses/:id/lessons" element={<ManageLessonsPage />} />
         <Route path="students" element={<TeacherStudentsPage />} />
         <Route path="analytics" element={<TeacherAnalyticsPage />} />
         {/* Redirect /teacher to /teacher/dashboard */}
