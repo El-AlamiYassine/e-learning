@@ -14,6 +14,9 @@ import TeacherDashboardOverview from '../pages/teacher/DashboardOverview';
 import StudentCoursesPage from '../pages/student/StudentCoursesPage';
 import StudentCalendarPage from '../pages/student/StudentCalendarPage';
 import StudentCertificatesPage from '../pages/student/StudentCertificatesPage';
+import CourseCatalogPage from '../pages/student/CourseCatalogPage';
+import CourseDetailPage from '../pages/student/CourseDetailPage';
+import LessonPage from '../pages/student/LessonPage';
 import TeacherCoursesPage from '../pages/teacher/TeacherCoursesPage';
 import TeacherStudentsPage from '../pages/teacher/TeacherStudentsPage';
 import TeacherAnalyticsPage from '../pages/teacher/TeacherAnalyticsPage';
@@ -84,7 +87,15 @@ export default function AppRouter() {
         <Route path="courses" element={<StudentCoursesPage />} />
         <Route path="calendar" element={<StudentCalendarPage />} />
         <Route path="certificates" element={<StudentCertificatesPage />} />
+        <Route path="catalog" element={<CourseCatalogPage />} />
+        <Route path="course/:id" element={<CourseDetailPage />} />
       </Route>
+
+      <Route path="/student/lesson/:id" element={
+        <ProtectedRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']}>
+          <LessonPage />
+        </ProtectedRoute>
+      } />
 
       {/* Routes prof */}
       <Route path="/teacher" element={

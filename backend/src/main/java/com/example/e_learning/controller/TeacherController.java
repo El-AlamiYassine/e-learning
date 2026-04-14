@@ -121,13 +121,18 @@ public class TeacherController {
 
     @GetMapping("/courses/{courseId}/lessons")
     public ResponseEntity<List<Lesson>> getLessons(@PathVariable Long courseId) {
-        // Optionnel: Vérifier que l'enseignant possède le cours
-        return ResponseEntity.ok(lessonRepository.findByCoursIdOrderByOrdreAsc(courseId));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return courseRepository.findById(courseId)
+                .filter(course -> course.getFormateur().getEmail().equals(email))
+                .map(course -> ResponseEntity.ok(lessonRepository.findByCoursIdOrderByOrdreAsc(courseId)))
+                .orElse(ResponseEntity.status(403).build());
     }
 
     @PostMapping("/courses/{courseId}/lessons")
     public ResponseEntity<?> addLesson(@PathVariable Long courseId, @RequestBody Lesson lessonRequest) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return courseRepository.findById(courseId)
+                .filter(course -> course.getFormateur().getEmail().equals(email))
                 .map(course -> {
                     lessonRequest.setCours(course);
                     if (lessonRequest.getOrdre() == null) {
@@ -136,7 +141,35 @@ public class TeacherController {
                     }
                     return ResponseEntity.ok(lessonRepository.save(lessonRequest));
                 })
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.status(403).build());
+    }
+
+    @PutMapping("/lessons/{id}")
+    public ResponseEntity<?> updateLesson(@PathVariable Long id, @RequestBody Lesson lessonRequest) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return lessonRepository.findById(id)
+                .filter(lesson -> lesson.getCours().getFormateur().getEmail().equals(email))
+                .map(lesson -> {
+                    lesson.setTitre(lessonRequest.getTitre());
+                    lesson.setContenu(lessonRequest.getContenu());
+                    lesson.setVideoUrl(lessonRequest.getVideoUrl());
+                    lesson.setOrdre(lessonRequest.getOrdre());
+                    return ResponseEntity.ok(lessonRepository.save(lesson));
+                })
+                .orElse(ResponseEntity.status(403).build());
+    }
+
+    @PatchMapping("/courses/{id}/status")
+    public ResponseEntity<?> updateCourseStatus(@PathVariable Long id, @RequestBody Map<String, String> body) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        String statusStr = body.get("status");
+        return courseRepository.findById(id)
+                .filter(course -> course.getFormateur().getEmail().equals(email))
+                .map(course -> {
+                    course.setStatut(StatutCours.valueOf(statusStr));
+                    return ResponseEntity.ok(courseRepository.save(course));
+                })
+                .orElse(ResponseEntity.status(403).build());
     }
 
     @DeleteMapping("/lessons/{id}")

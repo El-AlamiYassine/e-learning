@@ -39,7 +39,6 @@ public class User {
     private String motDePasse;
 
     @Enumerated(EnumType.STRING)
-    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     private Role role;
 

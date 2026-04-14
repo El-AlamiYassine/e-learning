@@ -30,7 +30,10 @@ public class Lesson {
     private String titre;
 
     @Column(columnDefinition = "TEXT")
-    private String description;
+    private String contenu;
+
+    @Column(length = 500)
+    private String videoUrl;
 
     @Column(nullable = false)
     @Builder.Default

@@ -19,4 +19,7 @@ export const deleteCourse = (id) => axios.delete(`${API_URL}/courses/${id}`, { h
 // Lessons
 export const getLessons = (courseId) => axios.get(`${API_URL}/courses/${courseId}/lessons`, { headers: getAuthHeader() });
 export const createLesson = (courseId, lessonData) => axios.post(`${API_URL}/courses/${courseId}/lessons`, lessonData, { headers: getAuthHeader() });
+export const updateLesson = (id, lessonData) => axios.put(`${API_URL}/lessons/${id}`, lessonData, { headers: getAuthHeader() });
 export const deleteLesson = (lessonId) => axios.delete(`${API_URL}/lessons/${lessonId}`, { headers: getAuthHeader() });
+
+export const updateCourseStatus = (id, status) => axios.patch(`${API_URL}/courses/${id}/status`, { status }, { headers: getAuthHeader() });

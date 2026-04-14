@@ -10,4 +10,7 @@ import java.util.List;
 public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     List<Enrollment> findByCoursFormateurEmail(String email);
     long countByCoursFormateurEmail(String email);
+    List<Enrollment> findByEtudiantEmail(String email);
+    long countByEtudiantEmail(String email);
+    long countByEtudiantEmailAndStatut(String email, com.example.e_learning.model.StatutInscription statut);
 }

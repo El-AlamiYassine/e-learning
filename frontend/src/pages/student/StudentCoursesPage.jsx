@@ -1,11 +1,47 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import studentApi from '../../api/studentApi';
 
 export default function StudentCoursesPage() {
-  const courses = [
-    { id: 1, title: 'Introduction à React', instructor: 'Jean Dupont', progress: 65, image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=2070&auto=format&fit=crop' },
-    { id: 2, title: 'Maîtriser Node.js', instructor: 'Marie Curie', progress: 30, image: 'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?q=80&w=2070&auto=format&fit=crop' },
-    { id: 3, title: 'UI/UX Design Avancé', instructor: 'Lucie Bernard', progress: 100, image: 'https://images.unsplash.com/photo-1586717791821-3f44a563de4c?q=80&w=2070&auto=format&fit=crop' }
-  ];
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const data = await studentApi.getEnrolledCourses();
+        setCourses(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching enrolled courses:', err);
+        setError('Impossible de charger vos cours.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger m-4" role="alert">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -18,30 +54,47 @@ export default function StudentCoursesPage() {
       </div>
 
       <div className="row g-4">
-        {courses.map(course => (
-          <div key={course.id} className="col-md-6 col-lg-4">
-            <div className="card h-100 border-0 shadow-sm overflow-hidden hover-lift">
-              <img src={course.image} className="card-img-top" alt={course.title} style={{ height: '160px', objectFit: 'cover' }} />
-              <div className="card-body">
-                <h5 className="card-title fw-bold">{course.title}</h5>
-                <p className="text-muted small mb-3">Par {course.instructor}</p>
-                <div className="progress mb-2" style={{ height: '8px' }}>
-                  <div 
-                    className={`progress-bar ${course.progress === 100 ? 'bg-success' : 'bg-primary'}`} 
-                    role="progressbar" 
-                    style={{ width: `${course.progress}%` }}
-                  ></div>
-                </div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span className="small text-muted">{course.progress}% complété</span>
-                  <Link to={`/student/course/${course.id}`} className="btn btn-sm btn-outline-primary px-3">
-                    {course.progress === 100 ? 'Revoir' : 'Continuer'}
-                  </Link>
+        {courses.length > 0 ? (
+          courses.map(course => (
+            <div key={course.id} className="col-md-6 col-lg-4">
+              <div className="card h-100 border-0 shadow-sm overflow-hidden hover-lift">
+                <img 
+                  src={course.imageUrl || 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?q=80&w=2070&auto=format&fit=crop'} 
+                  className="card-img-top" 
+                  alt={course.title} 
+                  style={{ height: '160px', objectFit: 'cover' }} 
+                />
+                <div className="card-body">
+                  <h5 className="card-title fw-bold">{course.title}</h5>
+                  <p className="text-muted small mb-3">Par {course.instructorName}</p>
+                  <div className="progress mb-2" style={{ height: '8px' }}>
+                    <div 
+                      className={`progress-bar ${course.progressPercentage === 100 ? 'bg-success' : 'bg-primary'}`} 
+                      role="progressbar" 
+                      style={{ width: `${course.progressPercentage}%` }}
+                    ></div>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="small text-muted">{course.progressPercentage}% complété</span>
+                    <Link to={`/student/course/${course.id}`} className="btn btn-sm btn-outline-primary px-3">
+                      {course.progressPercentage === 100 ? 'Revoir' : 'Continuer'}
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
+          ))
+        ) : (
+          <div className="col-12 text-center py-5">
+            <div className="bg-light rounded-4 p-5 d-inline-block">
+              <h4 className="fw-bold mb-3">Aucun cours trouvé</h4>
+              <p className="text-muted mb-4">Vous n'êtes pas encore inscrit à un cours.</p>
+              <Link to="/student/dashboard/catalog" className="btn btn-primary rounded-pill px-4">
+                Découvrir le catalogue
+              </Link>
+            </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
