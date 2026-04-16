@@ -121,6 +121,18 @@ public class StudentService {
 
         List<CourseDetailDTO.LessonDetailDTO> lessonDTOs = lessons.stream()
                 .map(l -> {
+                    List<CourseDetailDTO.DocumentDTO> docDTOs = null;
+                    if (l.getDocuments() != null) {
+                        docDTOs = l.getDocuments().stream().map(d -> 
+                            CourseDetailDTO.DocumentDTO.builder()
+                                .id(d.getId())
+                                .nom(d.getNom())
+                                .cheminFichier(d.getCheminFichier())
+                                .type(d.getType())
+                                .build()
+                        ).collect(Collectors.toList());
+                    }
+
                     return CourseDetailDTO.LessonDetailDTO.builder()
                         .id(l.getId())
                         .title(l.getTitre())
@@ -128,6 +140,7 @@ public class StudentService {
                         .videoUrl(l.getVideoUrl())
                         .ordre(l.getOrdre())
                         .completed(completedLessonIds.contains(l.getId()))
+                        .documents(docDTOs)
                         .build();
                 })
                 .collect(Collectors.toList());
@@ -143,6 +156,51 @@ public class StudentService {
                 .lessons(lessonDTOs)
                 .progressPercentage(progress)
                 .build();
+    }
+
+    public CourseDetailDTO.LessonDetailDTO getLessonDetail(Long lessonId, String email) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Leçon non trouvée"));
+
+        // Verify student is enrolled in the course
+        Long courseId = lesson.getCours().getId();
+        boolean enrolled = enrollmentRepository.findByEtudiantEmail(email).stream()
+                .anyMatch(e -> e.getCours().getId().equals(courseId));
+        if (!enrolled) {
+            throw new RuntimeException("Vous n'êtes pas inscrit à ce cours");
+        }
+
+        boolean completed = progressRepository.findByEtudiantEmailAndLessonId(email, lessonId)
+                .map(p -> p.getTermine())
+                .orElse(false);
+
+        List<CourseDetailDTO.DocumentDTO> docDTOs = null;
+        if (lesson.getDocuments() != null) {
+            docDTOs = lesson.getDocuments().stream().map(d ->
+                CourseDetailDTO.DocumentDTO.builder()
+                    .id(d.getId())
+                    .nom(d.getNom())
+                    .cheminFichier(d.getCheminFichier())
+                    .type(d.getType())
+                    .build()
+            ).collect(Collectors.toList());
+        }
+
+        return CourseDetailDTO.LessonDetailDTO.builder()
+                .id(lesson.getId())
+                .title(lesson.getTitre())
+                .content(lesson.getContenu())
+                .videoUrl(lesson.getVideoUrl())
+                .ordre(lesson.getOrdre())
+                .completed(completed)
+                .documents(docDTOs)
+                .build();
+    }
+
+    public CourseDetailDTO getCourseDetailByLessonId(Long lessonId, String email) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Leçon non trouvée"));
+        return getCourseDetail(lesson.getCours().getId(), email);
     }
 
     @Transactional

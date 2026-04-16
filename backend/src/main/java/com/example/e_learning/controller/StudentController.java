@@ -4,6 +4,7 @@ import com.example.e_learning.dto.CourseDetailDTO;
 import com.example.e_learning.dto.CourseProgressDTO;
 import com.example.e_learning.dto.StudentDashboardDTO;
 import com.example.e_learning.service.StudentService;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import java.util.Map;
 @RequestMapping("/api/student")
 @CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
+@Slf4j
 public class StudentController {
 
     private final StudentService studentService;
@@ -62,6 +64,28 @@ public class StudentController {
     @GetMapping("/courses/{courseId}/detail")
     public ResponseEntity<CourseDetailDTO> getCourseDetail(@PathVariable Long courseId, Authentication authentication) {
         return ResponseEntity.ok(studentService.getCourseDetail(courseId, authentication.getName()));
+    }
+
+    @GetMapping("/lessons/{lessonId}")
+    public ResponseEntity<?> getLessonDetail(@PathVariable Long lessonId, Authentication authentication) {
+        log.info("Requête de détail de leçon {} par {}", lessonId, authentication.getName());
+        try {
+            return ResponseEntity.ok(studentService.getLessonDetail(lessonId, authentication.getName()));
+        } catch (RuntimeException e) {
+            log.error("Erreur lors de la récupération de la leçon {}: {}", lessonId, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/lessons/{lessonId}/course")
+    public ResponseEntity<?> getCourseByLesson(@PathVariable Long lessonId, Authentication authentication) {
+        log.info("Requête du cours pour la leçon {} par {}", lessonId, authentication.getName());
+        try {
+            return ResponseEntity.ok(studentService.getCourseDetailByLessonId(lessonId, authentication.getName()));
+        } catch (RuntimeException e) {
+            log.error("Erreur lors de la récupération du cours pour la leçon {}: {}", lessonId, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/lessons/{lessonId}/complete")

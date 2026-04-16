@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getLessons, createLesson, updateLesson, deleteLesson } from '../../api/teacherApi';
+import { getLessons, createLesson, updateLesson, deleteLesson, uploadFile } from '../../api/teacherApi';
 
 export default function ManageLessonsPage() {
   const { id } = useParams();
@@ -13,8 +13,11 @@ export default function ManageLessonsPage() {
     titre: '',
     contenu: '',
     videoUrl: '',
-    ordre: ''
+    ordre: '',
+    documents: []
   });
+  const [videoFile, setVideoFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState(null);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -38,16 +41,36 @@ export default function ManageLessonsPage() {
     e.preventDefault();
     setSaving(true);
     setError('');
+    
     try {
+      let finalFormData = { ...formData };
+      
+      // Upload Video if selected
+      if (videoFile) {
+        const videoRes = await uploadFile(videoFile);
+        finalFormData.videoUrl = videoRes.data.url;
+      }
+      
+      // Upload PDF if selected
+      if (pdfFile) {
+        const pdfRes = await uploadFile(pdfFile);
+        finalFormData.documents = [{
+           nom: pdfFile.name,
+           cheminFichier: pdfRes.data.url,
+           type: pdfFile.type || 'application/pdf'
+        }];
+      }
+
       if (editingId) {
-        await updateLesson(editingId, formData);
+        await updateLesson(editingId, finalFormData);
       } else {
-        await createLesson(id, formData);
+        await createLesson(id, finalFormData);
       }
       resetForm();
       fetchLessons();
     } catch (err) {
-      setError('Erreur lors de l\'enregistrement de la leçon.');
+      console.error(err);
+      setError('Erreur lors de l\'enregistrement de la leçon ou de l\'upload.');
     } finally {
       setSaving(false);
     }
@@ -59,14 +82,19 @@ export default function ManageLessonsPage() {
       titre: lesson.titre || '',
       contenu: lesson.contenu || '',
       videoUrl: lesson.videoUrl || '',
-      ordre: lesson.ordre || ''
+      ordre: lesson.ordre || '',
+      documents: lesson.documents || []
     });
+    setVideoFile(null);
+    setPdfFile(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
     setEditingId(null);
-    setFormData({ titre: '', contenu: '', videoUrl: '', ordre: '' });
+    setFormData({ titre: '', contenu: '', videoUrl: '', ordre: '', documents: [] });
+    setVideoFile(null);
+    setPdfFile(null);
   };
 
   const handleDelete = async (lessonId) => {
@@ -124,14 +152,37 @@ export default function ManageLessonsPage() {
                   />
                 </div>
                 <div className="col-12">
-                  <label className="form-label small fw-bold text-muted text-uppercase">Vidéo URL</label>
+                  <label className="form-label small fw-bold text-muted text-uppercase">Vidéo (Fichier) ou URL</label>
+                  <div className="d-flex gap-2">
+                    <input 
+                      type="file" 
+                      accept="video/*"
+                      className="form-control border-light-subtle shadow-sm"
+                      onChange={(e) => setVideoFile(e.target.files[0])}
+                    />
+                    <input 
+                      type="url" 
+                      className="form-control border-light-subtle shadow-sm w-50"
+                      value={formData.videoUrl}
+                      onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
+                      placeholder="Ou lien (YouTube/MP4)"
+                      disabled={!!videoFile}
+                    />
+                  </div>
+                </div>
+                <div className="col-12">
+                  <label className="form-label small fw-bold text-muted text-uppercase">Support PDF (Optionnel)</label>
                   <input 
-                    type="url" 
+                    type="file" 
+                    accept="application/pdf"
                     className="form-control border-light-subtle shadow-sm"
-                    value={formData.videoUrl}
-                    onChange={(e) => setFormData({...formData, videoUrl: e.target.value})}
-                    placeholder="Lien YouTube ou MP4"
+                    onChange={(e) => setPdfFile(e.target.files[0])}
                   />
+                  {formData.documents && formData.documents.length > 0 && (
+                    <small className="text-primary mt-1 d-block">
+                      Dernier PDF enregistré: {formData.documents[0].nom}
+                    </small>
+                  )}
                 </div>
                 <div className="col-12">
                   <label className="form-label small fw-bold text-muted text-uppercase">Contenu de la leçon</label>

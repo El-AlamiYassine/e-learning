@@ -23,3 +23,14 @@ export const updateLesson = (id, lessonData) => axios.put(`${API_URL}/lessons/${
 export const deleteLesson = (lessonId) => axios.delete(`${API_URL}/lessons/${lessonId}`, { headers: getAuthHeader() });
 
 export const updateCourseStatus = (id, status) => axios.patch(`${API_URL}/courses/${id}/status`, { status }, { headers: getAuthHeader() });
+
+export const uploadFile = (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  return axios.post(`${API_URL}/upload`, formData, {
+    headers: {
+      ...getAuthHeader(),
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+};

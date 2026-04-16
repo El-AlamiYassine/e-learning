@@ -139,6 +139,9 @@ public class TeacherController {
                         int count = lessonRepository.findByCoursIdOrderByOrdreAsc(courseId).size();
                         lessonRequest.setOrdre(count + 1);
                     }
+                    if (lessonRequest.getDocuments() != null) {
+                        lessonRequest.getDocuments().forEach(doc -> doc.setLesson(lessonRequest));
+                    }
                     return ResponseEntity.ok(lessonRepository.save(lessonRequest));
                 })
                 .orElse(ResponseEntity.status(403).build());
@@ -154,6 +157,17 @@ public class TeacherController {
                     lesson.setContenu(lessonRequest.getContenu());
                     lesson.setVideoUrl(lessonRequest.getVideoUrl());
                     lesson.setOrdre(lessonRequest.getOrdre());
+                    
+                    if (lessonRequest.getDocuments() != null) {
+                        if (lesson.getDocuments() != null) {
+                            lesson.getDocuments().clear();
+                        }
+                        lessonRequest.getDocuments().forEach(doc -> {
+                            doc.setLesson(lesson);
+                            lesson.getDocuments().add(doc);
+                        });
+                    }
+                    
                     return ResponseEntity.ok(lessonRepository.save(lesson));
                 })
                 .orElse(ResponseEntity.status(403).build());

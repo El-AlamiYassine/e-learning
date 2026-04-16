@@ -32,6 +32,16 @@ const studentApi = {
     return response.data;
   },
 
+  getLessonDetail: async (lessonId) => {
+    const response = await axiosInstance.get(`/student/lessons/${lessonId}`);
+    return response.data;
+  },
+
+  getCourseByLesson: async (lessonId) => {
+    const response = await axiosInstance.get(`/student/lessons/${lessonId}/course`);
+    return response.data;
+  },
+
   completeLesson: async (lessonId) => {
     const response = await axiosInstance.post(`/student/lessons/${lessonId}/complete`);
     return response.data;

@@ -97,6 +97,14 @@ export default function AppRouter() {
         </ProtectedRoute>
       } />
 
+      <Route path="/student/course/:id" element={
+        <ProtectedRoute roles={['ROLE_STUDENT', 'ROLE_ADMIN']}>
+          <StudentLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<CourseDetailPage />} />
+      </Route>
+
       {/* Routes prof */}
       <Route path="/teacher" element={
         <ProtectedRoute roles={['ROLE_TEACHER', 'ROLE_ADMIN']}>

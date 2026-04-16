@@ -43,7 +43,7 @@ public class Lesson {
     @JoinColumn(name = "course_id", nullable = false)
     private Course cours;
 
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Document> documents;
 

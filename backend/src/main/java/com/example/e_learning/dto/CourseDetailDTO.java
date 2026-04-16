@@ -30,5 +30,17 @@ public class CourseDetailDTO {
         private String videoUrl;
         private int ordre;
         private boolean completed;
+        private List<DocumentDTO> documents;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DocumentDTO {
+        private Long id;
+        private String nom;
+        private String cheminFichier;
+        private String type;
     }
 }
