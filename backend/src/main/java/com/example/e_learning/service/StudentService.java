@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,6 +22,7 @@ public class StudentService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
+    private final QuizRepository quizRepository;
 
     public StudentDashboardDTO getDashboardSummary(String email) {
         long enrolledCount = enrollmentRepository.countByEtudiantEmail(email);
@@ -140,6 +142,8 @@ public class StudentService {
                         .videoUrl(l.getVideoUrl())
                         .ordre(l.getOrdre())
                         .completed(completedLessonIds.contains(l.getId()))
+                        .hasQuiz(l.getQuiz() != null)
+                        .quizId(l.getQuiz() != null ? l.getQuiz().getId() : null)
                         .documents(docDTOs)
                         .build();
                 })
@@ -193,8 +197,70 @@ public class StudentService {
                 .videoUrl(lesson.getVideoUrl())
                 .ordre(lesson.getOrdre())
                 .completed(completed)
+                .hasQuiz(lesson.getQuiz() != null)
+                .quizId(lesson.getQuiz() != null ? lesson.getQuiz().getId() : null)
                 .documents(docDTOs)
                 .build();
+    }
+
+    public CourseDetailDTO.QuizDTO getQuiz(Long lessonId, String email) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new RuntimeException("Leçon non trouvée"));
+        
+        Quiz quiz = quizRepository.findByLessonId(lessonId)
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé pour cette leçon"));
+
+        List<CourseDetailDTO.QuestionDTO> questionDTOs = quiz.getQuestions().stream()
+                .map(q -> CourseDetailDTO.QuestionDTO.builder()
+                        .id(q.getId())
+                        .enonce(q.getEnonce())
+                        .optionA(q.getOptionA())
+                        .optionB(q.getOptionB())
+                        .optionC(q.getOptionC())
+                        .optionD(q.getOptionD())
+                        // Don't send the correct answer yet
+                        .build())
+                .collect(Collectors.toList());
+
+        return CourseDetailDTO.QuizDTO.builder()
+                .id(quiz.getId())
+                .titre(quiz.getTitre())
+                .dureeMinutes(quiz.getDureeMinutes())
+                .scoreMinimum(quiz.getScoreMinimum())
+                .questions(questionDTOs)
+                .build();
+    }
+
+    @Transactional
+    public Map<String, Object> submitQuiz(Long lessonId, Map<Long, String> answers, String email) {
+        Quiz quiz = quizRepository.findByLessonId(lessonId)
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+
+        List<Question> questions = quiz.getQuestions();
+        int totalQuestions = questions.size();
+        int correctCount = 0;
+
+        for (Question q : questions) {
+            String studentAnswer = answers.get(q.getId());
+            if (studentAnswer != null && studentAnswer.equalsIgnoreCase(q.getReponseCorrecte())) {
+                correctCount++;
+            }
+        }
+
+        int score = totalQuestions > 0 ? (correctCount * 100) / totalQuestions : 0;
+        boolean passed = score >= quiz.getScoreMinimum();
+
+        if (passed) {
+            completeLesson(lessonId, email);
+        }
+
+        return Map.of(
+            "score", score,
+            "correctCount", correctCount,
+            "totalQuestions", totalQuestions,
+            "passed", passed,
+            "scoreMinimum", quiz.getScoreMinimum()
+        );
     }
 
     public CourseDetailDTO getCourseDetailByLessonId(Long lessonId, String email) {

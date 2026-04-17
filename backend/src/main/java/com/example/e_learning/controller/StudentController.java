@@ -97,4 +97,22 @@ public class StudentController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/lessons/{lessonId}/quiz")
+    public ResponseEntity<?> getQuiz(@PathVariable Long lessonId, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(studentService.getQuiz(lessonId, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/lessons/{lessonId}/quiz/submit")
+    public ResponseEntity<?> submitQuiz(@PathVariable Long lessonId, @RequestBody Map<Long, String> answers, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(studentService.submitQuiz(lessonId, answers, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }

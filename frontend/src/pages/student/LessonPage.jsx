@@ -14,6 +14,13 @@ export default function LessonPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Quiz State
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizData, setQuizData] = useState(null);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [quizResults, setQuizResults] = useState(null);
+  const [submittingQuiz, setSubmittingQuiz] = useState(false);
+
   useEffect(() => {
     const fetchLessonAndCourse = async () => {
       try {
@@ -72,6 +79,48 @@ export default function LessonPage() {
       alert('Erreur lors de la validation de la leçon.');
     } finally {
       setCompleting(false);
+    }
+  };
+
+  const startQuiz = async () => {
+    try {
+      const data = await studentApi.getQuiz(id);
+      setQuizData(data);
+      setShowQuiz(true);
+      setQuizResults(null);
+      setUserAnswers({});
+    } catch (err) {
+      alert('Erreur lors du chargement du quiz.');
+    }
+  };
+
+  const handleAnswerSelect = (questionId, option) => {
+    setUserAnswers(prev => ({ ...prev, [questionId]: option }));
+  };
+
+  const submitQuiz = async () => {
+    if (Object.keys(userAnswers).length < quizData.questions.length) {
+      if (!window.confirm('Vous n\'avez pas répondu à toutes les questions. Voulez-vous continuer ?')) return;
+    }
+
+    setSubmittingQuiz(true);
+    try {
+      const results = await studentApi.submitQuiz(id, userAnswers);
+      setQuizResults(results);
+      if (results.passed) {
+        setShowSuccess(true);
+        setCurrentLesson(prev => ({ ...prev, completed: true }));
+        // Refresh course progress locally
+        setCourseDetail(prev => ({
+          ...prev,
+          lessons: prev.lessons.map(l => l.id.toString() === id ? { ...l, completed: true } : l),
+          progressPercentage: Math.round(((prev.lessons.filter(l => l.completed || l.id.toString() === id).length) / prev.lessons.length) * 100)
+        }));
+      }
+    } catch (err) {
+      alert('Erreur lors de la soumission du quiz.');
+    } finally {
+      setSubmittingQuiz(false);
     }
   };
 
@@ -244,7 +293,7 @@ export default function LessonPage() {
                       </span>
                       À propos de cette leçon
                     </h5>
-                    <div className="lesson-body text-dark" style={{ fontSize: '1.1rem', lineHeight: '10.8', whiteSpace: 'pre-wrap' }}>
+                    <div className="lesson-body text-dark" style={{ fontSize: '1.1rem', whiteSpace: 'pre-wrap' }}>
                         {currentLesson.content}
                     </div>
                   </div>
@@ -285,6 +334,94 @@ export default function LessonPage() {
                           </a>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quiz Section */}
+                {currentLesson.hasQuiz && !showQuiz && !quizResults && (
+                  <div className="card border-0 shadow-sm rounded-4 bg-primary bg-opacity-10 p-4 mb-5 text-center">
+                    <div className="mb-3">
+                      <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    </div>
+                    <h4 className="fw-bold text-dark">Testez vos connaissances !</h4>
+                    <p className="text-secondary">Un quiz est disponible pour cette leçon pour valider vos acquis.</p>
+                    <button onClick={startQuiz} className="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm mt-2">Démarrer le Quiz</button>
+                  </div>
+                )}
+
+                {showQuiz && quizData && (
+                  <div className="card shadow border-0 rounded-4 p-4 p-md-5 mb-5 bg-white">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                      <h4 className="fw-bold mb-0">{quizData.titre}</h4>
+                      <button className="btn-close" onClick={() => setShowQuiz(false)}></button>
+                    </div>
+                    
+                    <div className="quiz-questions">
+                      {quizData.questions.map((q, qIdx) => (
+                        <div key={q.id} className="mb-5">
+                          <h6 className="fw-bold mb-3">Question {qIdx + 1}: {q.enonce}</h6>
+                          <div className="row g-3">
+                            {['A', 'B', 'C', 'D'].map(opt => {
+                              const optKey = `option${opt}`;
+                              if (!q[optKey]) return null;
+                              return (
+                                <div key={opt} className="col-md-6">
+                                  <div 
+                                    className={`p-3 rounded-3 border-2 transition-all cursor-pointer d-flex align-items-center gap-3 ${userAnswers[q.id] === opt ? 'border-primary bg-primary bg-opacity-10' : 'border-light-subtle bg-light bg-opacity-50 h-100'}`}
+                                    onClick={() => handleAnswerSelect(q.id, opt)}
+                                    style={{ cursor: 'pointer' }}
+                                  >
+                                    <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold small ${userAnswers[q.id] === opt ? 'bg-primary text-white' : 'bg-white border text-secondary'}`} style={{ width: '24px', height: '24px', flexShrink: 0 }}>
+                                      {opt}
+                                    </div>
+                                    <span className={userAnswers[q.id] === opt ? 'fw-bold text-primary' : 'text-dark'}>{q[optKey]}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="d-flex justify-content-center mt-4">
+                      <button 
+                        onClick={submitQuiz} 
+                        disabled={submittingQuiz}
+                        className="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg"
+                      >
+                        {submittingQuiz ? <span className="spinner-border spinner-border-sm me-2"></span> : null}
+                        Envoyer mes réponses
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {quizResults && (
+                  <div className={`card border-0 shadow rounded-4 p-5 mb-5 text-center ${quizResults.passed ? 'bg-success bg-opacity-10' : 'bg-warning bg-opacity-10'}`}>
+                    <div className="mb-3">
+                      {quizResults.passed ? (
+                         <div className="bg-success text-white rounded-circle d-inline-flex p-3 shadow">
+                           <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                         </div>
+                      ) : (
+                        <div className="bg-warning text-dark rounded-circle d-inline-flex p-3 shadow">
+                          <svg width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                        </div>
+                      )}
+                    </div>
+                    <h2 className="fw-bold mb-2">Votre Score : {quizResults.score}%</h2>
+                    <p className="lead mb-4">
+                      {quizResults.passed 
+                        ? 'Félicitations ! Vous avez réussi le quiz et validé cette leçon.' 
+                        : `Dommage ! Il vous faut au moins ${quizResults.scoreMinimum}% pour réussir.`}
+                    </p>
+                    <div className="d-flex justify-content-center gap-3">
+                      <button onClick={startQuiz} className="btn btn-outline-dark rounded-pill px-4 fw-bold">Recommencer</button>
+                      {quizResults.passed && nextLesson && (
+                        <button onClick={() => navigate(`/student/lesson/${nextLesson.id}`)} className="btn btn-success rounded-pill px-4 fw-bold shadow-sm border-0">Continuer</button>
+                      )}
                     </div>
                   </div>
                 )}

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Map;
 
 @Service
@@ -68,7 +69,13 @@ public class JwtService {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes;
+        // Check if the secret key is hex-encoded (64+ chars and only hex chars)
+        if (secretKey != null && secretKey.matches("^[0-9a-fA-F]{64,}$")) {
+            keyBytes = HexFormat.of().parseHex(secretKey);
+        } else {
+            keyBytes = Decoders.BASE64.decode(secretKey);
+        }
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

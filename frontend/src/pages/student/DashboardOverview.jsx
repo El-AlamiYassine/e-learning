@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import studentApi from '../../api/studentApi';
 
@@ -128,9 +129,16 @@ export default function DashboardOverview() {
                       <div className="progress-bar bg-primary rounded-pill" style={{ width: `${course.progressPercentage}%` }}></div>
                     </div>
                   </div>
-                  <button className="btn btn-outline-primary rounded-circle ms-4 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/></svg>
-                  </button>
+                  <Link 
+                    to={`/student/course/${course.id}`} 
+                    className="btn btn-outline-primary rounded-circle d-flex align-items-center justify-content-center hover-lift ms-4 shadow-sm flex-shrink-0"
+                    style={{ width: '42px', height: '42px' }}
+                    title={course.progressPercentage === 100 ? 'Revoir le cours' : 'Continuer le cours'}
+                  >
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
+                    </svg>
+                  </Link>
                 </div>
               ))
             ) : (

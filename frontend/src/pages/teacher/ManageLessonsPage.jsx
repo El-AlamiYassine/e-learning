@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getLessons, createLesson, updateLesson, deleteLesson, uploadFile } from '../../api/teacherApi';
+import { getLessons, createLesson, updateLesson, deleteLesson, uploadFile, getQuiz, saveQuiz } from '../../api/teacherApi';
 
 export default function ManageLessonsPage() {
   const { id } = useParams();
@@ -20,6 +20,18 @@ export default function ManageLessonsPage() {
   const [pdfFile, setPdfFile] = useState(null);
   const [error, setError] = useState('');
 
+  // Quiz State
+  const [showQuizModal, setShowQuizModal] = useState(false);
+  const [currentQuizLesson, setCurrentQuizLesson] = useState(null);
+  const [quizLoading, setQuizLoading] = useState(false);
+  const [quizSaving, setQuizSaving] = useState(false);
+  const [quizData, setQuizData] = useState({
+    titre: '',
+    dureeMinutes: 30,
+    scoreMinimum: 50,
+    questions: []
+  });
+
   useEffect(() => {
     fetchLessons();
   }, [id]);
@@ -28,9 +40,9 @@ export default function ManageLessonsPage() {
     try {
       setLoading(true);
       const res = await getLessons(id);
-      setLessons(res.data);
+      setLessons(res.data || []);
     } catch (err) {
-      console.error('Erreur chargement leçons', err);
+      console.error('Erreur chargement leçons:', err);
       setError('Impossible de charger les leçons.');
     } finally {
       setLoading(false);
@@ -105,6 +117,70 @@ export default function ManageLessonsPage() {
       } catch (err) {
         alert('Erreur lors de la suppression.');
       }
+    }
+  };
+
+  // Quiz Functions
+  const handleOpenQuiz = async (lesson) => {
+    setCurrentQuizLesson(lesson);
+    setShowQuizModal(true);
+    setQuizLoading(true);
+    try {
+      const res = await getQuiz(lesson.id);
+      if (res.data) {
+        setQuizData({
+          id: res.data.id,
+          titre: res.data.titre || 'Quiz: ' + lesson.titre,
+          dureeMinutes: res.data.dureeMinutes || 30,
+          scoreMinimum: res.data.scoreMinimum || 50,
+          questions: res.data.questions || []
+        });
+      } else {
+        setQuizData({
+          titre: 'Quiz: ' + lesson.titre,
+          dureeMinutes: 30,
+          scoreMinimum: 50,
+          questions: [{ enonce: '', optionA: '', optionB: '', optionC: '', optionD: '', reponseCorrecte: 'A' }]
+        });
+      }
+    } catch (err) {
+      console.error('Erreur quiz', err);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
+  const handleAddQuestion = () => {
+    setQuizData({
+      ...quizData,
+      questions: [...quizData.questions, { enonce: '', optionA: '', optionB: '', optionC: '', optionD: '', reponseCorrecte: 'A' }]
+    });
+  };
+
+  const handleRemoveQuestion = (index) => {
+    const newQuestions = [...quizData.questions];
+    newQuestions.splice(index, 1);
+    setQuizData({ ...quizData, questions: newQuestions });
+  };
+
+  const handleQuestionChange = (index, field, value) => {
+    const newQuestions = [...quizData.questions];
+    newQuestions[index] = { ...newQuestions[index], [field]: value };
+    setQuizData({ ...quizData, questions: newQuestions });
+  };
+
+  const saveQuizData = async () => {
+    setQuizSaving(true);
+    try {
+      await saveQuiz(currentQuizLesson.id, quizData);
+      setShowQuizModal(false);
+      alert('Quiz enregistré avec succès !');
+      fetchLessons();
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors de la sauvegarde du quiz.');
+    } finally {
+      setQuizSaving(false);
     }
   };
 
@@ -231,7 +307,7 @@ export default function ManageLessonsPage() {
                 </div>
               ) : (
                 <div className="list-group list-group-flush">
-                  {lessons.map((lesson, index) => (
+                  {Array.isArray(lessons) && lessons.map((lesson, index) => (
                     <div key={lesson.id} className={`list-group-item p-4 border-0 border-bottom transition-all ${editingId === lesson.id ? 'bg-primary bg-opacity-10 border-start border-primary border-4' : ''}`}>
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex gap-3 align-items-center overflow-hidden">
@@ -255,6 +331,10 @@ export default function ManageLessonsPage() {
                            </div>
                         </div>
                         <div className="d-flex gap-2">
+                          <button onClick={() => handleOpenQuiz(lesson)} className="btn btn-sm btn-outline-info rounded-pill px-3 shadow-sm transition-all hover-lift d-flex align-items-center gap-1">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Quiz
+                          </button>
                           <button onClick={() => handleEdit(lesson)} className="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm transition-all hover-lift">
                             Modifier
                           </button>
@@ -271,6 +351,112 @@ export default function ManageLessonsPage() {
           </div>
         </div>
       </div>
+
+      {/* Quiz Modal */}
+      {showQuizModal && (
+        <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content border-0 shadow-lg rounded-4">
+              <div className="modal-header border-0 p-4 pb-0">
+                <h5 className="modal-title fw-bold">Configuration du Quiz : {currentQuizLesson?.titre}</h5>
+                <button type="button" className="btn-close" onClick={() => setShowQuizModal(false)}></button>
+              </div>
+              <div className="modal-body p-4">
+                {quizLoading ? (
+                  <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>
+                ) : (
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label small fw-bold">Titre du Quiz</label>
+                      <input type="text" className="form-control" value={quizData.titre} onChange={e => setQuizData({...quizData, titre: e.target.value})} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold">Durée (min)</label>
+                      <input type="number" className="form-control" value={quizData.dureeMinutes} onChange={e => setQuizData({...quizData, dureeMinutes: e.target.value})} />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label small fw-bold">Score Min (%)</label>
+                      <input type="number" className="form-control" value={quizData.scoreMinimum} onChange={e => setQuizData({...quizData, scoreMinimum: e.target.value})} />
+                    </div>
+
+                    <hr className="my-4" />
+                    
+                    <div className="d-flex justify-content-between align-items-center">
+                      <h6 className="fw-bold mb-0">Questions ({quizData.questions.length})</h6>
+                      <button onClick={handleAddQuestion} className="btn btn-sm btn-primary rounded-pill px-3">+ Ajouter</button>
+                    </div>
+
+                    {quizData.questions.map((q, idx) => (
+                      <div key={idx} className="card bg-light border-0 p-3 mb-3 position-relative rounded-3">
+                        <button 
+                          onClick={() => handleRemoveQuestion(idx)} 
+                          className="btn btn-sm btn-link text-danger position-absolute top-0 end-0 m-2 text-decoration-none"
+                        >Supprimer</button>
+                        
+                        <div className="mb-3">
+                          <label className="form-label small fw-bold">Question {idx + 1}</label>
+                          <textarea 
+                            className="form-control border-0 shadow-sm" 
+                            rows="2" 
+                            value={q.enonce} 
+                            onChange={e => handleQuestionChange(idx, 'enonce', e.target.value)}
+                            placeholder="Enoncé de la question..."
+                          ></textarea>
+                        </div>
+                        <div className="row g-2">
+                          <div className="col-md-6">
+                            <div className="input-group input-group-sm">
+                              <span className="input-group-text bg-white border-0 fw-bold">A</span>
+                              <input type="text" className="form-control border-0 shadow-sm" value={q.optionA} onChange={e => handleQuestionChange(idx, 'optionA', e.target.value)} />
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <div className="input-group input-group-sm">
+                              <span className="input-group-text bg-white border-0 fw-bold">B</span>
+                              <input type="text" className="form-control border-0 shadow-sm" value={q.optionB} onChange={e => handleQuestionChange(idx, 'optionB', e.target.value)} />
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <div className="input-group input-group-sm">
+                              <span className="input-group-text bg-white border-0 fw-bold">C</span>
+                              <input type="text" className="form-control border-0 shadow-sm" value={q.optionC} onChange={e => handleQuestionChange(idx, 'optionC', e.target.value)} />
+                            </div>
+                          </div>
+                          <div className="col-md-6">
+                            <div className="input-group input-group-sm">
+                              <span className="input-group-text bg-white border-0 fw-bold">D</span>
+                              <input type="text" className="form-control border-0 shadow-sm" value={q.optionD} onChange={e => handleQuestionChange(idx, 'optionD', e.target.value)} />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 d-flex align-items-center gap-2">
+                          <label className="small fw-bold mb-0">Bonne réponse :</label>
+                          <select 
+                            className="form-select form-select-sm border-0 shadow-sm w-auto fw-bold text-success" 
+                            value={q.reponseCorrecte} 
+                            onChange={e => handleQuestionChange(idx, 'reponseCorrecte', e.target.value)}
+                          >
+                            <option value="A">Option A</option>
+                            <option value="B">Option B</option>
+                            <option value="C">Option C</option>
+                            <option value="D">Option D</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer border-0 p-4">
+                <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => setShowQuizModal(false)}>Fermer</button>
+                <button type="button" className="btn btn-primary rounded-pill px-4 shadow-sm" disabled={quizSaving || quizLoading} onClick={saveQuizData}>
+                  {quizSaving ? 'Enregistrement...' : 'Enregistrer le Quiz'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

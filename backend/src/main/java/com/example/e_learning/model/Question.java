@@ -39,5 +39,6 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Quiz quiz;
 }

@@ -36,6 +36,7 @@ public class Quiz {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id", unique = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Lesson lesson;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)

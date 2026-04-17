@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/teacher")
 @CrossOrigin(origins = "http://localhost:5173")
 @RequiredArgsConstructor
+@Slf4j
 public class TeacherController {
 
     private final CourseRepository courseRepository;
@@ -22,6 +24,8 @@ public class TeacherController {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
+    private final QuizRepository quizRepository;
+    private final QuestionRepository questionRepository;
 
     @GetMapping("/categories")
     public List<Category> getCategories() {
@@ -122,29 +126,39 @@ public class TeacherController {
     @GetMapping("/courses/{courseId}/lessons")
     public ResponseEntity<List<Lesson>> getLessons(@PathVariable Long courseId) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
         return courseRepository.findById(courseId)
-                .filter(course -> course.getFormateur().getEmail().equals(email))
-                .map(course -> ResponseEntity.ok(lessonRepository.findByCoursIdOrderByOrdreAsc(courseId)))
-                .orElse(ResponseEntity.status(403).build());
+                .map(course -> {
+                    if (course.getFormateur().getEmail().equals(email)) {
+                        return ResponseEntity.ok(lessonRepository.findByCoursIdOrderByOrdreAsc(courseId));
+                    } else {
+                        return ResponseEntity.status(403).<List<Lesson>>build();
+                    }
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/courses/{courseId}/lessons")
     public ResponseEntity<?> addLesson(@PathVariable Long courseId, @RequestBody Lesson lessonRequest) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
         return courseRepository.findById(courseId)
-                .filter(course -> course.getFormateur().getEmail().equals(email))
                 .map(course -> {
-                    lessonRequest.setCours(course);
-                    if (lessonRequest.getOrdre() == null) {
-                        int count = lessonRepository.findByCoursIdOrderByOrdreAsc(courseId).size();
-                        lessonRequest.setOrdre(count + 1);
+                    if (course.getFormateur().getEmail().equals(email)) {
+                        lessonRequest.setCours(course);
+                        if (lessonRequest.getOrdre() == null) {
+                            int count = lessonRepository.findByCoursIdOrderByOrdreAsc(courseId).size();
+                            lessonRequest.setOrdre(count + 1);
+                        }
+                        if (lessonRequest.getDocuments() != null) {
+                            lessonRequest.getDocuments().forEach(doc -> doc.setLesson(lessonRequest));
+                        }
+                        return ResponseEntity.ok(lessonRepository.save(lessonRequest));
+                    } else {
+                        return ResponseEntity.status(403).body("Vous n'êtes pas autorisé à modifier ce cours");
                     }
-                    if (lessonRequest.getDocuments() != null) {
-                        lessonRequest.getDocuments().forEach(doc -> doc.setLesson(lessonRequest));
-                    }
-                    return ResponseEntity.ok(lessonRepository.save(lessonRequest));
                 })
-                .orElse(ResponseEntity.status(403).build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/lessons/{id}")
@@ -188,14 +202,67 @@ public class TeacherController {
 
     @DeleteMapping("/lessons/{id}")
     public ResponseEntity<?> deleteLesson(@PathVariable Long id) {
-        lessonRepository.deleteById(id);
-        return ResponseEntity.ok().build();
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return lessonRepository.findById(id)
+                .filter(lesson -> lesson.getCours().getFormateur().getEmail().equals(email))
+                .map(lesson -> {
+                    lessonRepository.delete(lesson);
+                    return ResponseEntity.ok().build();
+                })
+                .orElse(ResponseEntity.status(403).build());
     }
 
     @GetMapping("/students")
     public ResponseEntity<List<Enrollment>> getMyStudents() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ResponseEntity.ok(enrollmentRepository.findByCoursFormateurEmail(email));
+    }
+
+    // --- Gestion des Quiz (QSM) ---
+
+    @GetMapping("/lessons/{lessonId}/quiz")
+    public ResponseEntity<?> getLessonQuiz(@PathVariable Long lessonId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        return lessonRepository.findById(lessonId)
+                .filter(lesson -> lesson.getCours().getFormateur().getEmail().equals(email))
+                .map(lesson -> {
+                    Quiz quiz = quizRepository.findByLessonId(lessonId).orElse(null);
+                    return ResponseEntity.ok(quiz);
+                })
+                .orElse(ResponseEntity.status(403).build());
+    }
+
+    @PostMapping("/lessons/{lessonId}/quiz")
+    public ResponseEntity<?> saveQuiz(@PathVariable Long lessonId, @RequestBody Quiz quizRequest) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return lessonRepository.findById(lessonId)
+                .filter(lesson -> lesson.getCours().getFormateur().getEmail().equals(email))
+                .map(lesson -> {
+                    Quiz quiz = quizRepository.findByLessonId(lessonId)
+                            .orElse(Quiz.builder().lesson(lesson).build());
+                    
+                    quiz.setTitre(quizRequest.getTitre());
+                    quiz.setDureeMinutes(quizRequest.getDureeMinutes());
+                    quiz.setScoreMinimum(quizRequest.getScoreMinimum());
+                    
+                    Quiz savedQuiz = quizRepository.save(quiz);
+                    
+                    // Remove old questions and add new ones
+                    if (quiz.getQuestions() != null) {
+                        questionRepository.deleteAll(quiz.getQuestions());
+                    }
+                    
+                    if (quizRequest.getQuestions() != null) {
+                        quizRequest.getQuestions().forEach(q -> {
+                            q.setQuiz(savedQuiz);
+                            questionRepository.save(q);
+                        });
+                    }
+                    
+                    return ResponseEntity.ok(quizRepository.findById(savedQuiz.getId()).orElse(savedQuiz));
+                })
+                .orElse(ResponseEntity.status(403).build());
     }
 }
 
