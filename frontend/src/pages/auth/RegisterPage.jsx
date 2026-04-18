@@ -53,91 +53,98 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-vh-100 bg-light d-flex align-items-center justify-content-center px-3 py-5">
-      <div className="bg-white rounded shadow-sm w-100 p-4 p-md-5 position-relative" style={{ maxWidth: '500px' }}>
+    <div className="auth-wrapper">
+      <div className="auth-card fade-in-up" style={{ maxWidth: '550px' }}>
 
-        <div className="mb-3 text-start">
-          <Link to="/" className="text-decoration-none text-secondary d-inline-flex align-items-center gap-1">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+        <div className="mb-4 text-start">
+          <Link to="/" className="text-decoration-none text-muted d-inline-flex align-items-center gap-2 hover-lift" style={{ transition: 'all 0.2s' }}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span className="small fw-medium">Accueil</span>
+            <span className="small fw-semibold">Retour</span>
           </Link>
         </div>
 
         <div className="text-center mb-4">
-          <h1 className="h4 fw-bold text-dark">Créer un compte</h1>
-          <p className="text-secondary small mt-1">Rejoignez la plateforme E-Learning</p>
+          <h1 className="h3 fw-bold text-gradient mb-2">Créer un compte</h1>
+          <p className="text-muted small">Rejoignez la plateforme E-Learning d'excellence</p>
         </div>
 
         {error && (
-          <div className="alert alert-danger mb-4" role="alert">
-            {error}
+          <div className="alert alert-danger border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center gap-2" role="alert">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="small fw-medium">{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div className="row g-3 mb-3">
             <div className="col-sm-6">
-              <label className="form-label small fw-medium">Prénom</label>
+              <label className="form-label small fw-bold text-dark mb-2">Prénom</label>
               <input
                 type="text" name="prenom" value={form.prenom}
-                onChange={handleChange} required placeholder="Prénom"
-                className="form-control"
+                onChange={handleChange} required placeholder="Votre prénom"
+                className="input-premium"
               />
             </div>
             <div className="col-sm-6">
-              <label className="form-label small fw-medium">Nom</label>
+              <label className="form-label small fw-bold text-dark mb-2">Nom</label>
               <input
                 type="text" name="nom" value={form.nom}
-                onChange={handleChange} required placeholder="Nom"
-                className="form-control"
+                onChange={handleChange} required placeholder="Votre nom"
+                className="input-premium"
               />
             </div>
           </div>
 
           <div className="mb-3">
-            <label className="form-label small fw-medium">Email</label>
+            <label className="form-label small fw-bold text-dark mb-2">Adresse Email</label>
             <input
               type="email" name="email" value={form.email}
               onChange={handleChange} required placeholder="vous@email.com"
-              className={`form-control ${emailInvalid ? 'is-invalid' : ''} ${emailValid ? 'is-valid' : ''}`}
+              className={`input-premium ${emailInvalid ? 'border-danger' : ''} ${emailValid ? 'border-success' : ''}`}
             />
-            {emailInvalid && <div className="invalid-feedback">Format d'email invalide</div>}
+            {emailInvalid && <div className="text-danger small mt-1 fw-medium">Format d'email invalide</div>}
           </div>
 
           <div className="mb-3">
-            <label className="form-label small fw-medium">Mot de passe</label>
+            <label className="form-label small fw-bold text-dark mb-2">Mot de passe</label>
             <input
               type="password" name="motDePasse" value={form.motDePasse}
               onChange={handleChange} required placeholder="Minimum 8 caractères"
               minLength={8}
-              className={`form-control ${passwordInvalid ? 'is-invalid' : ''} ${passwordValid ? 'is-valid' : ''}`}
+              className={`input-premium ${passwordInvalid ? 'border-danger' : ''} ${passwordValid ? 'border-success' : ''}`}
             />
-            {passwordInvalid && <div className="invalid-feedback">Code faible : minimum 8 caractères requis</div>}
+            {passwordInvalid && <div className="text-danger small mt-1 fw-medium">Minimum 8 caractères requis</div>}
           </div>
 
           <div className="mb-4">
-            <label className="form-label small fw-medium">Confirmer le mot de passe</label>
+            <label className="form-label small fw-bold text-dark mb-2">Confirmer le mot de passe</label>
             <input
               type="password" name="confirmationMotDePasse" value={form.confirmationMotDePasse}
-              onChange={handleChange} required placeholder="Confirmez votre mot de passe"
+              onChange={handleChange} required placeholder="Retapez votre mot de passe"
               minLength={8}
-              className={`form-control ${confirmInvalid ? 'is-invalid' : ''} ${confirmValid ? 'is-valid' : ''}`}
+              className={`input-premium ${confirmInvalid ? 'border-danger' : ''} ${confirmValid ? 'border-success' : ''}`}
             />
-            {confirmInvalid && <div className="invalid-feedback">Les mots de passe ne correspondent pas</div>}
+            {confirmInvalid && <div className="text-danger small mt-1 fw-medium">Les mots de passe ne correspondent pas</div>}
           </div>
+          
           <button
             type="submit" disabled={loading}
-            className="btn btn-primary w-100 py-2"
+            className="btn-premium w-100 py-3 mt-2"
           >
-            {loading ? 'Inscription...' : 'Créer mon compte'}
+            {loading ? (
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            ) : null}
+            {loading ? 'Création en cours...' : 'Créer mon compte'}
           </button>
         </form>
 
-        <p className="text-center text-secondary small mt-4 mb-0">
+        <p className="text-center text-muted small mt-4 mb-0 fw-medium">
           Déjà un compte ?{' '}
-          <Link to="/login" className="text-primary text-decoration-none fw-medium">
+          <Link to="/login" className="text-decoration-none fw-bold" style={{ color: 'var(--color-primary)' }}>
             Se connecter
           </Link>
         </p>

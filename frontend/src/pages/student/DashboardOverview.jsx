@@ -55,17 +55,17 @@ export default function DashboardOverview() {
           </h1>
           <p className="text-secondary mb-0">Voici ce qui se passe dans votre apprentissage aujourd'hui.</p>
         </div>
-        <div className="d-none d-sm-block">
-          <button className="btn btn-primary rounded-pill px-4 py-2 hover-lift fw-medium shadow-sm">
+        <div className="d-none d-sm-block fade-in-up">
+          <Link to="/student/dashboard/catalog" className="btn-premium rounded-pill px-4 py-2 shadow-sm text-decoration-none">
             Explorer les cours
-          </button>
+          </Link>
         </div>
       </div>
 
       {/* Stats Widgets */}
       <div className="row g-4 mb-5">
-        <div className="col-12 col-md-4">
-          <div className="glass-card rounded-4 p-4 hover-lift h-100 d-flex flex-column border-0 bg-white">
+        <div className="col-12 col-md-4 fade-in-up" style={{ animationDelay: '0.1s' }}>
+          <div className="glass-panel p-4 hover-lift h-100 d-flex flex-column border-0">
             <div className="d-flex align-items-center mb-3">
               <div className="bg-primary bg-opacity-10 text-primary p-2 rounded-3 me-3">
                 <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
@@ -76,8 +76,8 @@ export default function DashboardOverview() {
           </div>
         </div>
         
-        <div className="col-12 col-md-4">
-          <div className="glass-card rounded-4 p-4 hover-lift h-100 d-flex flex-column border-0 bg-white">
+        <div className="col-12 col-md-4 fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <div className="glass-panel p-4 hover-lift h-100 d-flex flex-column border-0">
             <div className="d-flex align-items-center mb-3">
               <div className="bg-success bg-opacity-10 text-success p-2 rounded-3 me-3">
                 <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
@@ -88,8 +88,9 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        <div className="col-12 col-md-4">
-          <div className="glass-card rounded-4 p-4 flex-column hover-lift h-100 border-0 bg-gradient-primary d-flex align-items-start position-relative overflow-hidden">
+        <div className="col-12 col-md-4 fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="glass-panel p-4 flex-column hover-lift h-100 border-0 d-flex align-items-start position-relative overflow-hidden" 
+               style={{ background: 'linear-gradient(135deg, var(--color-primary) 0%, var(--color-tertiary) 100%)' }}>
              {/* Decorative circle */}
             <div className="position-absolute bg-white rounded-circle opacity-10" style={{ width: '150px', height: '150px', top: '-30px', right: '-30px' }}></div>
             
@@ -114,7 +115,7 @@ export default function DashboardOverview() {
           <div className="d-flex flex-column gap-3">
             {summary?.recentCourses && summary.recentCourses.length > 0 ? (
               summary.recentCourses.map(course => (
-                <div key={course.id} className="glass-card bg-white p-3 rounded-4 d-flex align-items-center hover-lift border-0 shadow-sm">
+                <div key={course.id} className="glass-panel p-3 d-flex align-items-center hover-lift border-0 shadow-sm fade-in-up">
                   <div className="rounded-3 bg-light overflow-hidden me-3" style={{ width: '100px', height: '70px' }}>
                     <img 
                       src={course.imageUrl || "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=300&q=80"} 
@@ -131,8 +132,8 @@ export default function DashboardOverview() {
                   </div>
                   <Link 
                     to={`/student/course/${course.id}`} 
-                    className="btn btn-outline-primary rounded-circle d-flex align-items-center justify-content-center hover-lift ms-4 shadow-sm flex-shrink-0"
-                    style={{ width: '42px', height: '42px' }}
+                    className="btn-premium rounded-circle d-flex align-items-center justify-content-center ms-4 shadow-sm flex-shrink-0"
+                    style={{ width: '42px', height: '42px', padding: 0 }}
                     title={course.progressPercentage === 100 ? 'Revoir le cours' : 'Continuer le cours'}
                   >
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
@@ -151,8 +152,8 @@ export default function DashboardOverview() {
         </div>
 
         {/* Right Col: Timeline/Deadlines */}
-        <div className="col-12 col-lg-4">
-          <div className="bg-white rounded-4 p-4 border-0 shadow-sm h-100">
+        <div className="col-12 col-lg-4 fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <div className="glass-panel p-4 border-0 shadow-sm h-100">
             <h5 className="fw-bold mb-4 text-dark">Prochainement</h5>
             <div className="text-center py-4">
               <p className="text-muted small">Aucun événement à venir.</p>

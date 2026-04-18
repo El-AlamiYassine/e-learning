@@ -49,30 +49,8 @@ export default function CourseDetailPage() {
 
   return (
     <div className="container py-4 pb-5 animate-fadeIn">
-      <style>{`
-        .course-hero {
-          background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        }
-        .lesson-row {
-          transition: all 0.2s ease;
-          border: 1px solid #eef2f7;
-        }
-        .lesson-row:hover {
-          transform: translateX(8px);
-          border-color: #3b82f6;
-          background-color: #f0f7ff !important;
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-
       {/* Course Hero Header */}
-      <div className="course-hero rounded-4 shadow-sm border overflow-hidden mb-5">
+      <div className="glass-panel overflow-hidden mb-5 p-0">
         <div className="row g-0">
           <div className="col-md-4">
             <div className="position-relative h-100 min-vh-25">
@@ -121,11 +99,12 @@ export default function CourseDetailPage() {
             
             <p className="text-secondary mb-4 col-lg-10 leading-relaxed">{course.description}</p>
             
-            <div className="d-flex gap-3 mt-auto">
+            <div className="d-flex gap-3 mt-4 mt-lg-auto">
               {course.lessons.length > 0 && (
                 <Link 
                   to={`/student/lesson/${nextLesson.id}`} 
-                  className="btn btn-primary rounded-pill px-5 py-2-5 fw-bold shadow-lg hover-lift d-flex align-items-center gap-2"
+                  className="btn-premium rounded-pill px-5 py-3 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 flex-grow-1 flex-md-grow-0 hover-lift"
+                  style={{ fontSize: '1.05rem' }}
                 >
                   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -141,7 +120,7 @@ export default function CourseDetailPage() {
 
       <div className="row g-5">
         <div className="col-lg-8">
-          <div className="bg-white rounded-4 shadow-sm p-4 border overflow-hidden">
+          <div className="glass-panel p-4 border-0">
             <h4 className="fw-bold text-dark mb-4 d-flex align-items-center gap-3">
               <span className="bg-primary bg-opacity-10 text-primary p-2 rounded-3">
                 <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
@@ -153,22 +132,22 @@ export default function CourseDetailPage() {
               {course.lessons.map((lesson, index) => (
                 <div 
                   key={lesson.id} 
-                  className={`lesson-row p-3 rounded-4 d-flex align-items-center justify-content-between ${lesson.completed ? 'bg-light bg-opacity-30' : 'bg-white'}`}
+                  className={`p-3 rounded-4 d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between hover-lift mb-2 gap-3 transition-all ${lesson.completed ? 'glass-panel opacity-75' : 'glass-panel'}`}
                 >
                   <div className="d-flex align-items-center gap-3 overflow-hidden">
-                    <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold small flex-shrink-0 ${lesson.completed ? 'bg-success text-white' : 'bg-light text-secondary'}`} style={{ width: '36px', height: '36px' }}>
+                    <div className={`rounded-circle d-flex align-items-center justify-content-center shadow-sm fw-bold small flex-shrink-0 text-white`} style={{ width: '36px', height: '36px', background: lesson.completed ? 'var(--bs-success)' : 'linear-gradient(135deg, var(--color-primary), var(--color-tertiary))' }}>
                       {lesson.completed ? (
                         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       ) : index + 1}
                     </div>
                     <div className="overflow-hidden">
                       <h6 className="mb-0 fw-bold text-dark text-truncate">{lesson.title}</h6>
-                      <p className="mb-0 text-muted small">Leçon vidéo • 15:00</p>
+                      <p className="mb-0 text-muted small">Leçon vidéo • ~15 min</p>
                     </div>
                   </div>
                   <Link 
                     to={`/student/lesson/${lesson.id}`} 
-                    className={`btn btn-sm rounded-pill px-4 fw-bold flex-shrink-0 ${lesson.completed ? 'btn-outline-success border-2' : 'btn-outline-primary border-2 shadow-hover'}`}
+                    className={`btn btn-sm rounded-pill px-4 fw-bold flex-shrink-0 ${lesson.completed ? 'btn-outline-success border-2' : 'btn-premium'}`}
                   >
                     {lesson.completed ? 'Revoir' : 'Démarrer'}
                   </Link>
@@ -189,7 +168,7 @@ export default function CourseDetailPage() {
           <div className="d-flex flex-column gap-4 sticky-top" style={{ top: '24px' }}>
             
             {/* Quick stats card */}
-            <div className="bg-white rounded-4 shadow-sm p-4 border">
+            <div className="glass-panel p-4 border-0">
               <h5 className="fw-bold text-dark mb-4">Détails de la formation</h5>
               <div className="d-flex flex-column gap-3">
                 <div className="d-flex align-items-center gap-3 p-3 bg-light rounded-4 border">

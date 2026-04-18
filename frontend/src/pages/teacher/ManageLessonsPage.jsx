@@ -204,8 +204,8 @@ export default function ManageLessonsPage() {
 
       <div className="row g-4">
         {/* Formulaire d'ajout/édition */}
-        <div className="col-lg-5 order-lg-2">
-           <div className="card shadow-sm border-0 bg-white p-4 sticky-top" style={{ top: '20px', zIndex: 10 }}>
+        <div className="col-lg-5 order-lg-2 fade-in-up" style={{ animationDelay: '0.1s' }}>
+           <div className="glass-panel p-4 sticky-top" style={{ top: '20px', zIndex: 10 }}>
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h5 className="fw-bold mb-0 text-dark">{editingId ? 'Modifier la Leçon' : 'Ajouter une Leçon'}</h5>
                 {editingId && (
@@ -282,7 +282,7 @@ export default function ManageLessonsPage() {
                   />
                 </div>
                 <div className="col-12 mt-4">
-                   <button type="submit" className={`btn ${editingId ? 'btn-success' : 'btn-primary'} w-100 py-3 fw-bold rounded-pill shadow-sm hover-lift`} disabled={saving}>
+                   <button type="submit" className={`btn ${editingId ? 'btn-success' : 'btn-premium'} w-100 py-3 fw-bold rounded-pill shadow-sm hover-lift`} disabled={saving}>
                      {saving ? 'Enregistrement...' : editingId ? 'Enregistrer les modifications' : 'Ajouter la leçon'}
                    </button>
                 </div>
@@ -291,9 +291,9 @@ export default function ManageLessonsPage() {
         </div>
 
         {/* Liste des leçons */}
-        <div className="col-lg-7 order-lg-1">
-          <div className="card shadow-sm border-0 bg-white min-vh-50 overflow-hidden rounded-4">
-            <div className="card-header bg-white border-0 p-4">
+        <div className="col-lg-7 order-lg-1 fade-in-up">
+          <div className="glass-panel min-vh-50 overflow-hidden p-0">
+            <div className="border-bottom p-4">
                <h5 className="fw-bold mb-0 text-dark">Programme du Cours</h5>
             </div>
             <div className="card-body p-0">
@@ -308,7 +308,7 @@ export default function ManageLessonsPage() {
               ) : (
                 <div className="list-group list-group-flush">
                   {Array.isArray(lessons) && lessons.map((lesson, index) => (
-                    <div key={lesson.id} className={`list-group-item p-4 border-0 border-bottom transition-all ${editingId === lesson.id ? 'bg-primary bg-opacity-10 border-start border-primary border-4' : ''}`}>
+                    <div key={lesson.id} className={`list-group-item bg-transparent p-4 border-0 border-bottom transition-all ${editingId === lesson.id ? 'bg-primary bg-opacity-10 border-start border-primary border-4' : 'hover-bg-light'}`}>
                       <div className="d-flex justify-content-between align-items-center">
                         <div className="d-flex gap-3 align-items-center overflow-hidden">
                            <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold small" style={{width: '36px', height: '36px', flexShrink: 0}}>
@@ -448,8 +448,8 @@ export default function ManageLessonsPage() {
                 )}
               </div>
               <div className="modal-footer border-0 p-4">
-                <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => setShowQuizModal(false)}>Fermer</button>
-                <button type="button" className="btn btn-primary rounded-pill px-4 shadow-sm" disabled={quizSaving || quizLoading} onClick={saveQuizData}>
+                <button type="button" className="btn btn-outline-secondary rounded-pill px-4" onClick={() => setShowQuizModal(false)}>Fermer</button>
+                <button type="button" className="btn-premium rounded-pill px-4 shadow-sm" disabled={quizSaving || quizLoading} onClick={saveQuizData}>
                   {quizSaving ? 'Enregistrement...' : 'Enregistrer le Quiz'}
                 </button>
               </div>

@@ -43,32 +43,35 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="vh-100 bg-light d-flex align-items-center justify-content-center px-3">
-      <div className="bg-white rounded shadow-sm w-100 p-4 p-md-5 position-relative" style={{ maxWidth: '450px' }}>
-
-        <div className="mb-3 text-start">
-          <Link to="/" className="text-decoration-none text-secondary d-inline-flex align-items-center gap-1">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+    <div className="auth-wrapper">
+      <div className="auth-card fade-in-up">
+        
+        <div className="mb-4 text-start">
+          <Link to="/" className="text-decoration-none text-muted d-inline-flex align-items-center gap-2 hover-lift" style={{ transition: 'all 0.2s' }}>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span className="small fw-medium">Accueil</span>
+            <span className="small fw-semibold">Retour à l'accueil</span>
           </Link>
         </div>
 
-        <div className="text-center mb-4">
-          <h1 className="h4 fw-bold text-dark">E-Learning</h1>
-          <p className="text-secondary small mt-1">Connectez-vous à votre compte</p>
+        <div className="text-center mb-5">
+          <h1 className="h3 fw-bold text-gradient mb-2">Bienvenue</h1>
+          <p className="text-muted small">Connectez-vous pour accéder à vos cours</p>
         </div>
 
         {error && (
-          <div className="alert alert-danger mb-4" role="alert">
-            {error}
+          <div className="alert alert-danger border-0 shadow-sm rounded-3 mb-4 d-flex align-items-center gap-2" role="alert">
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="small fw-medium">{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div className="mb-3">
-            <label className="form-label small fw-medium">Email</label>
+          <div className="mb-4">
+            <label className="form-label small fw-bold text-dark mb-2">Adresse Email</label>
             <input
               type="email"
               name="email"
@@ -76,16 +79,16 @@ export default function LoginPage() {
               onChange={handleChange}
               required
               placeholder="vous@email.com"
-              className={`form-control ${emailInvalid ? 'is-invalid' : ''} ${emailValid ? 'is-valid' : ''}`}
+              className={`input-premium ${emailInvalid ? 'border-danger' : ''} ${emailValid ? 'border-success' : ''}`}
             />
-            {emailInvalid && <div className="invalid-feedback">Format d'email invalide</div>}
+            {emailInvalid && <div className="text-danger small mt-1 fw-medium">Format d'email invalide</div>}
           </div>
 
           <div className="mb-4">
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <label className="form-label small fw-medium mb-0">Mot de passe</label>
-              <Link to="/forgot-password" className="small text-decoration-none text-primary">
-                Oublié ?
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <label className="form-label small fw-bold text-dark mb-0">Mot de passe</label>
+              <Link to="/forgot-password" className="small text-decoration-none fw-semibold" style={{ color: 'var(--color-primary)' }}>
+                Mot de passe oublié ?
               </Link>
             </div>
             <input
@@ -95,40 +98,49 @@ export default function LoginPage() {
               onChange={handleChange}
               required
               placeholder="••••••••"
-              className={`form-control ${passwordInvalid ? 'is-invalid' : ''} ${passwordValid ? 'is-valid' : ''}`}
+              className={`input-premium ${passwordInvalid ? 'border-danger' : ''} ${passwordValid ? 'border-success' : ''}`}
             />
-            {passwordInvalid && <div className="invalid-feedback">Code faible : minimum 8 caractères requis</div>}
+            {passwordInvalid && <div className="text-danger small mt-1 fw-medium">Minimum 8 caractères requis</div>}
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="btn btn-primary w-100 py-2"
+            className="btn-premium w-100 py-3 mt-2"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? (
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            ) : null}
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
           </button>
         </form>
 
         <div className="d-flex align-items-center my-4 text-muted">
-          <hr className="flex-grow-1 m-0" />
-          <span className="mx-3 small fw-medium">OU</span>
-          <hr className="flex-grow-1 m-0" />
+          <hr className="flex-grow-1 border-light opacity-50 m-0" />
+          <span className="mx-3 small fw-semibold">OU</span>
+          <hr className="flex-grow-1 border-light opacity-50 m-0" />
         </div>
 
         <button
           type="button"
           onClick={() => alert("Fonctionnalité 'Continuer avec Google' à venir !")}
-          className="btn btn-outline-dark w-100 py-2 d-flex align-items-center justify-content-center gap-2"
+          className="btn w-100 py-3 d-flex align-items-center justify-content-center gap-2"
+          style={{ background: 'white', color: 'var(--text-dark)', border: '1.5px solid var(--border-light)', borderRadius: 'var(--radius-sm)', fontWeight: '600', transition: 'all 0.3s ease' }}
+          onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+          onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-            <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
+            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.222 0-9.654-3.342-11.127-8.02l-6.6 5.064C9.554 39.882 16.273 44 24 44z"/>
+            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
           </svg>
-          <span className="fw-medium">Continuer avec Google</span>
+          Continuer avec Google
         </button>
 
-        <p className="text-center text-secondary small mt-4 mb-0">
+        <p className="text-center text-muted small mt-4 mb-0 fw-medium">
           Pas encore de compte ?{' '}
-          <Link to="/register" className="text-primary text-decoration-none fw-medium">
+          <Link to="/register" className="text-decoration-none fw-bold" style={{ color: 'var(--color-primary)' }}>
             S'inscrire
           </Link>
         </p>

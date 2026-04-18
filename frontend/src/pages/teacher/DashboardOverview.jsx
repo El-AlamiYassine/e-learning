@@ -30,7 +30,7 @@ export default function TeacherDashboardOverview() {
   return (
     <div>
       <h2 className="fw-bold mb-4 text-primary">Tableau de Bord Enseignant</h2>
-      
+
       <div className="row g-4 mb-4">
         <div className="col-md-3">
           <div className="card shadow-sm border-0 h-100 bg-white hover-up overflow-hidden">
@@ -70,11 +70,11 @@ export default function TeacherDashboardOverview() {
         <div className="card-body px-0">
           <h5 className="fw-bold mb-4">Derniers cours ajoutés</h5>
           {stats.totalCourses === 0 ? (
-             <div className="text-center py-5">
-                <span className="text-muted">Vous n'avez pas encore publié de cours.</span>
-             </div>
+            <div className="text-center py-5">
+              <span className="text-muted">Vous n'avez pas encore publié de cours.</span>
+            </div>
           ) : (
-             <p className="text-success">Consultez l'onglet "Mes Cours" pour voir la liste complète.</p>
+            <p className="text-success">Consultez l'onglet "Mes Cours" pour voir la liste complète.</p>
           )}
         </div>
       </div>

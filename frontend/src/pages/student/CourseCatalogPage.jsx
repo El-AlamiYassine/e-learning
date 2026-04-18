@@ -79,7 +79,7 @@ export default function CourseCatalogPage() {
       <div className="row g-4">
         {/* Categories Sidebar */}
         <div className="col-lg-3">
-          <div className="glass-card bg-white p-4 rounded-4 shadow-sm border-0 sticky-top" style={{ top: '20px' }}>
+          <div className="glass-panel p-4 sticky-top" style={{ top: '20px' }}>
             <h5 className="fw-bold mb-4 text-dark">Catégories</h5>
             <div className="d-flex flex-column gap-2">
               <button 
@@ -119,7 +119,7 @@ export default function CourseCatalogPage() {
               {courses.length > 0 ? (
                 courses.map(course => (
                   <div key={course.id} className="col-md-6 col-xl-4">
-                    <div className="card h-100 border-0 shadow-sm overflow-hidden rounded-4 hover-lift">
+                    <div className="glass-panel overflow-hidden hover-lift d-flex flex-column h-100 fade-in-up">
                       <div className="position-relative">
                         <img 
                           src={course.imageUrl || 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80'} 
@@ -154,14 +154,14 @@ export default function CourseCatalogPage() {
 
                         <div className="mt-4">
                           {enrolledCourseIds.has(course.id) ? (
-                            <Link to={`/student/course/${course.id}`} className="btn btn-success w-100 rounded-pill fw-bold border-0 shadow-sm">
+                            <Link to={`/student/course/${course.id}`} className="btn w-100 rounded-pill fw-bold border-0 shadow-sm text-white" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}>
                               Déjà inscrit - Voir
                             </Link>
                           ) : (
                             <button 
                               onClick={() => handleEnroll(course.id)}
                               disabled={enrollLoading === course.id}
-                              className="btn btn-primary w-100 rounded-pill fw-bold border-0 shadow-sm hover-lift d-flex align-items-center justify-content-center gap-2"
+                              className="btn-premium w-100 rounded-pill mt-top d-flex align-items-center justify-content-center gap-2"
                             >
                               {enrollLoading === course.id ? (
                                 <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
