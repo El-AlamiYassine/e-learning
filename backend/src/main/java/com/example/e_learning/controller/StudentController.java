@@ -129,4 +129,9 @@ public class StudentController {
     public ResponseEntity<?> getAllCertificates(Authentication authentication) {
         return ResponseEntity.ok(studentService.getStudentCertificates(authentication.getName()));
     }
+
+    @GetMapping("/calendar/events")
+    public ResponseEntity<?> getAllEvents(Authentication authentication) {
+        return ResponseEntity.ok(studentService.getStudentCalendarEvents(authentication.getName()));
+    }
 }

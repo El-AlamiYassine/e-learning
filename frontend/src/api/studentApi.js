@@ -65,6 +65,11 @@ const studentApi = {
   getCertificates: async () => {
     const response = await axiosInstance.get('/student/certificates');
     return response.data;
+  },
+
+  getCalendarEvents: async () => {
+    const response = await axiosInstance.get('/student/calendar/events');
+    return response.data;
   }
 };
 

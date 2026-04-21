@@ -24,6 +24,7 @@ public class StudentService {
     private final LessonRepository lessonRepository;
     private final QuizRepository quizRepository;
     private final CertificateRepository certificateRepository;
+    private final CalendarEventRepository calendarEventRepository;
 
     public StudentDashboardDTO getDashboardSummary(String email) {
         long enrolledCount = enrollmentRepository.countByEtudiantEmail(email);
@@ -331,6 +332,30 @@ public class StudentService {
                         .courseTitle(cert.getCours().getTitre())
                         .issueDate(cert.getDateEmission())
                         .verificationCode(cert.getCodeVerification())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    public List<CalendarEventDTO> getStudentCalendarEvents(String email) {
+        List<Long> enrolledCourseIds = enrollmentRepository.findByEtudiantEmail(email).stream()
+                .map(e -> e.getCours().getId())
+                .collect(Collectors.toList());
+
+        List<CalendarEvent> events;
+        if (enrolledCourseIds.isEmpty()) {
+            events = calendarEventRepository.findByCourseIsNull();
+        } else {
+            events = calendarEventRepository.findGlobalAndByCourseIds(enrolledCourseIds);
+        }
+
+        return events.stream()
+                .map(e -> CalendarEventDTO.builder()
+                        .id(e.getId())
+                        .title(e.getTitle())
+                        .description(e.getDescription())
+                        .eventDate(e.getEventDate())
+                        .type(e.getType())
+                        .courseTitle(e.getCourse() != null ? e.getCourse().getTitre() : "Global")
                         .build())
                 .collect(Collectors.toList());
     }
