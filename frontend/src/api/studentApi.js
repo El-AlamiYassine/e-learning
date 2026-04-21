@@ -55,6 +55,16 @@ const studentApi = {
   submitQuiz: async (lessonId, answers) => {
     const response = await axiosInstance.post(`/student/lessons/${lessonId}/quiz/submit`, answers);
     return response.data;
+  },
+
+  getCertificate: async (courseId) => {
+    const response = await axiosInstance.get(`/student/courses/${courseId}/certificate`);
+    return response.data;
+  },
+
+  getCertificates: async () => {
+    const response = await axiosInstance.get('/student/certificates');
+    return response.data;
   }
 };
 

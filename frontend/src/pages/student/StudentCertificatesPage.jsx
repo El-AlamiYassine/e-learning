@@ -1,8 +1,68 @@
+import { useState, useEffect } from 'react';
+import studentApi from '../../api/studentApi';
+import { generateCertificatePDF } from '../../utils/CertificatePdf';
+
 export default function StudentCertificatesPage() {
-  const certificates = [
-    { id: 1, course: 'UI/UX Design Avancé', date: '15 Mars 2026', id_cert: 'CERT-UIUX-9876' },
-    { id: 2, course: 'JavaScript Fondamentaux', date: '02 Janvier 2026', id_cert: 'CERT-JS-5432' }
-  ];
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [downloadingCert, setDownloadingCert] = useState(null);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, []);
+
+  const fetchCertificates = async () => {
+    try {
+      setLoading(true);
+      const data = await studentApi.getCertificates();
+      setCertificates(data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching certificates:', err);
+      setError('Impossible de charger vos certificats.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownload = async (cert) => {
+    try {
+      setDownloadingCert(cert.id);
+      generateCertificatePDF(cert);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Erreur lors de la génération du PDF.');
+    } finally {
+      setDownloadingCert(null);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center p-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Chargement...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger m-4" role="alert">
+        {error}
+      </div>
+    );
+  }
 
   return (
     <div className="fade-in-up">
@@ -17,22 +77,32 @@ export default function StudentCertificatesPage() {
         <div className="row g-4">
           {certificates.map(cert => (
             <div key={cert.id} className="col-md-6 col-lg-4">
-              <div className="glass-panel hover-lift h-100 p-4 border-top border-4" style={{ borderColor: 'var(--color-primary)' }}>
+              <div className="glass-panel hover-lift h-100 p-4 border-top border-4 d-flex flex-column" style={{ borderColor: 'var(--color-primary)' }}>
                 <div className="mb-3">
                   <div className="mb-3 text-white d-flex align-items-center justify-content-center rounded-3 shadow-sm" style={{ width: '50px', height: '50px', background: 'linear-gradient(135deg, var(--color-primary), var(--color-tertiary))' }}>
                     <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
                   </div>
-                  <h5 className="fw-bold mb-1 text-dark">{cert.course}</h5>
-                  <p className="text-secondary small">Obtenu le {cert.date}</p>
+                  <h5 className="fw-bold mb-1 text-dark">{cert.courseTitle}</h5>
+                  <p className="text-secondary small">Obtenu le {formatDate(cert.issueDate)}</p>
                 </div>
                 <div className="mt-auto">
                   <div className="p-2 rounded mb-3 small text-center font-monospace fw-medium" style={{ background: 'rgba(0,0,0,0.03)', color: 'var(--text-muted)' }}>
-                    ID: {cert.id_cert}
+                    ID: {cert.verificationCode}
                   </div>
                   <div className="d-flex gap-2">
-                    <button className="btn btn-outline-secondary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-2 rounded-pill fw-bold hover-lift">
-                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                      PDF
+                    <button 
+                      onClick={() => handleDownload(cert)}
+                      disabled={downloadingCert === cert.id}
+                      className="btn btn-outline-primary btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-2 rounded-pill fw-bold hover-lift"
+                    >
+                      {downloadingCert === cert.id ? (
+                        <span className="spinner-border spinner-border-sm" role="status"></span>
+                      ) : (
+                        <>
+                          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                          Télécharger PDF
+                        </>
+                      )}
                     </button>
                     <button className="btn-premium btn-sm flex-grow-1 d-flex align-items-center justify-content-center gap-2 rounded-pill shadow-sm" style={{ padding: '0.4rem' }}>
                       <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>

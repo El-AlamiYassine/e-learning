@@ -115,4 +115,18 @@ public class StudentController {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/courses/{courseId}/certificate")
+    public ResponseEntity<?> getCertificate(@PathVariable Long courseId, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(studentService.getOrCreateCertificate(courseId, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/certificates")
+    public ResponseEntity<?> getAllCertificates(Authentication authentication) {
+        return ResponseEntity.ok(studentService.getStudentCertificates(authentication.getName()));
+    }
 }

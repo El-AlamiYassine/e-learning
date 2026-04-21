@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import studentApi from '../../api/studentApi';
+import { generateCertificatePDF } from '../../utils/CertificatePdf';
 
 export default function DashboardOverview() {
   const { user } = useAuth();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [downloadingCert, setDownloadingCert] = useState(null);
 
   useEffect(() => {
     const fetchSummary = async () => {
@@ -26,6 +28,19 @@ export default function DashboardOverview() {
 
     fetchSummary();
   }, []);
+
+  const handleDownloadCertificate = async (courseId) => {
+    try {
+      setDownloadingCert(courseId);
+      const certData = await studentApi.getCertificate(courseId);
+      generateCertificatePDF(certData);
+    } catch (err) {
+      console.error('Error downloading certificate:', err);
+      alert('Erreur lors de la génération du certificat. Veuillez réessayer.');
+    } finally {
+      setDownloadingCert(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -140,6 +155,24 @@ export default function DashboardOverview() {
                       <path d="M10.804 8 5 4.633v6.734L10.804 8zm.792-.696a.802.802 0 0 1 0 1.392l-6.363 3.692C4.713 12.69 4 12.345 4 11.692V4.308c0-.653.713-.998 1.233-.696l6.363 3.692z"/>
                     </svg>
                   </Link>
+
+                  {course.progressPercentage === 100 && (
+                    <button 
+                      onClick={() => handleDownloadCertificate(course.id)}
+                      className="btn btn-outline-success rounded-circle d-flex align-items-center justify-content-center ms-2 shadow-sm flex-shrink-0"
+                      style={{ width: '42px', height: '42px', padding: 0 }}
+                      title="Télécharger le certificat"
+                      disabled={downloadingCert === course.id}
+                    >
+                      {downloadingCert === course.id ? (
+                        <span className="spinner-border spinner-border-sm" role="status"></span>
+                      ) : (
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                          <path d="M8 0a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 12.293V.5A.5.5 0 0 1 8 0z"/>
+                        </svg>
+                      )}
+                    </button>
+                  )}
                 </div>
               ))
             ) : (

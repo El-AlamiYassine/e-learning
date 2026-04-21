@@ -23,6 +23,7 @@ public class StudentService {
     private final UserRepository userRepository;
     private final LessonRepository lessonRepository;
     private final QuizRepository quizRepository;
+    private final CertificateRepository certificateRepository;
 
     public StudentDashboardDTO getDashboardSummary(String email) {
         long enrolledCount = enrollmentRepository.countByEtudiantEmail(email);
@@ -285,5 +286,52 @@ public class StudentService {
         progress.setTermine(true);
         progress.setDateMaj(LocalDateTime.now());
         progressRepository.save(progress);
+    }
+
+    @Transactional
+    public CertificateDTO getOrCreateCertificate(Long courseId, String email) {
+        User student = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Étudiant non trouvé"));
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
+
+        // Check completion
+        List<Lesson> lessons = lessonRepository.findByCoursIdOrderByOrdreAsc(courseId);
+        long completedCount = progressRepository.countByEtudiantEmailAndLessonCoursIdAndTermineTrue(email, courseId);
+        
+        if (lessons.isEmpty() || completedCount < lessons.size()) {
+            throw new RuntimeException("Le cours n'est pas encore terminé à 100%");
+        }
+
+        Certificate certificate = certificateRepository.findByEtudiantEmailAndCoursId(email, courseId)
+                .orElseGet(() -> {
+                    Certificate newCert = Certificate.builder()
+                            .etudiant(student)
+                            .cours(course)
+                            .dateEmission(LocalDateTime.now())
+                            .codeVerification(java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                            .build();
+                    return certificateRepository.save(newCert);
+                });
+
+        return CertificateDTO.builder()
+                .id(certificate.getId())
+                .studentName(student.getPrenom() + " " + student.getNom())
+                .courseTitle(course.getTitre())
+                .issueDate(certificate.getDateEmission())
+                .verificationCode(certificate.getCodeVerification())
+                .build();
+    }
+
+    public List<CertificateDTO> getStudentCertificates(String email) {
+        return certificateRepository.findByEtudiantEmailOrderByDateEmissionDesc(email).stream()
+                .map(cert -> CertificateDTO.builder()
+                        .id(cert.getId())
+                        .studentName(cert.getEtudiant().getPrenom() + " " + cert.getEtudiant().getNom())
+                        .courseTitle(cert.getCours().getTitre())
+                        .issueDate(cert.getDateEmission())
+                        .verificationCode(cert.getCodeVerification())
+                        .build())
+                .collect(Collectors.toList());
     }
 }
