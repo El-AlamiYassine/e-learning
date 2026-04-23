@@ -13,4 +13,9 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     List<Enrollment> findByEtudiantEmail(String email);
     long countByEtudiantEmail(String email);
     long countByEtudiantEmailAndStatut(String email, com.example.e_learning.model.StatutInscription statut);
+
+    @org.springframework.data.jpa.repository.Query("SELECT SUM(e.cours.prix) FROM Enrollment e WHERE e.cours.formateur.email = :email")
+    Double getTotalRevenueByTeacherEmail(String email);
+
+    List<Enrollment> findByCoursFormateurEmailOrderByDateInscriptionAsc(String email);
 }

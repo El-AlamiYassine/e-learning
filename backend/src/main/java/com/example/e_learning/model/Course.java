@@ -51,6 +51,9 @@ public class Course {
     @Builder.Default
     private LocalDateTime dateCreation = LocalDateTime.now();
 
+    @Column(nullable = true)
+    private Double prix;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "formateur_id", nullable = false)
     private User formateur;

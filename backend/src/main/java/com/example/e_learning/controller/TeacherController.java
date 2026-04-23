@@ -26,6 +26,8 @@ public class TeacherController {
     private final LessonRepository lessonRepository;
     private final QuizRepository quizRepository;
     private final QuestionRepository questionRepository;
+    private final CommentRepository commentRepository;
+    private final ProgressRepository progressRepository;
 
     @GetMapping("/categories")
     public List<Category> getCategories() {
@@ -39,11 +41,58 @@ public class TeacherController {
         long totalCourses = courseRepository.countByFormateurEmail(email);
         long totalStudents = enrollmentRepository.countByCoursFormateurEmail(email);
         
+        Double totalRevenue = enrollmentRepository.getTotalRevenueByTeacherEmail(email);
+        if (totalRevenue == null) totalRevenue = 0.0;
+
+        // Monthly revenue for the last 12 months
+        List<Enrollment> enrollments = enrollmentRepository.findByCoursFormateurEmailOrderByDateInscriptionAsc(email);
+        java.time.LocalDate now = java.time.LocalDate.now();
+        double[] monthlyRevenues = new double[12];
+        for (Enrollment e : enrollments) {
+            java.time.LocalDateTime date = e.getDateInscription();
+            if (date.isAfter(now.minusMonths(12).atStartOfDay())) {
+                int monthDiff = (int) java.time.temporal.ChronoUnit.MONTHS.between(
+                    date.toLocalDate().withDayOfMonth(1), 
+                    now.withDayOfMonth(1)
+                );
+                if (monthDiff >= 0 && monthDiff < 12) {
+                    int index = 11 - monthDiff;
+                    monthlyRevenues[index] += (e.getCours().getPrix() != null ? e.getCours().getPrix() : 0.0);
+                }
+            }
+        }
+
+        // Engagement calculation
+        long completedLessons = progressRepository.countCompletedLessonsByTeacherEmail(email);
+        long totalPotentialLessons = progressRepository.countTotalPotentialLessonsByTeacherEmail(email);
+        int engagement = totalPotentialLessons > 0 ? (int) ((completedLessons * 100) / totalPotentialLessons) : 0;
+
+        // Average Rating
+        Double avgRating = commentRepository.getAverageRatingByTeacherEmail(email);
+        if (avgRating == null) avgRating = 0.0;
+        long totalReviews = commentRepository.countByTeacherEmail(email);
+
+        // Most followed course
+        List<Course> courses = courseRepository.findByFormateurEmail(email);
+        String topCourse = "Aucun";
+        long maxEnrollments = -1;
+        for (Course c : courses) {
+            long count = enrollmentRepository.findAll().stream().filter(e -> e.getCours().getId().equals(c.getId())).count();
+            if (count > maxEnrollments) {
+                maxEnrollments = count;
+                topCourse = c.getTitre();
+            }
+        }
+        
         Map<String, Object> stats = Map.of(
             "totalCourses", totalCourses,
             "totalStudents", totalStudents,
-            "averageRating", 4.5,
-            "activeCourses", totalCourses
+            "totalRevenue", totalRevenue,
+            "monthlyRevenues", monthlyRevenues,
+            "engagement", engagement,
+            "averageRating", Math.round(avgRating * 10.0) / 10.0,
+            "totalReviews", totalReviews,
+            "topCourse", topCourse
         );
         
         return ResponseEntity.ok(stats);
@@ -80,6 +129,7 @@ public class TeacherController {
                             .imageUrl(request.getImageUrl())
                             .categorie(category)
                             .formateur(user)
+                            .prix(request.getPrix())
                             .statut(StatutCours.BROUILLON)
                             .build();
 
@@ -100,6 +150,7 @@ public class TeacherController {
                     course.setTitre(request.getTitre());
                     course.setDescription(request.getDescription());
                     course.setImageUrl(request.getImageUrl());
+                    course.setPrix(request.getPrix());
                     if (request.getCategoryId() != null) {
                         Category category = categoryRepository.findById(request.getCategoryId()).orElse(null);
                         course.setCategorie(category);

@@ -14,4 +14,5 @@ public class CourseRequest {
     private String description;
     private String imageUrl;
     private Long categoryId;
+    private Double prix;
 }

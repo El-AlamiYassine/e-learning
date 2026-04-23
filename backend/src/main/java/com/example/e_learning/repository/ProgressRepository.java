@@ -17,4 +17,10 @@ public interface ProgressRepository extends JpaRepository<Progress, Long> {
     // To help calculate progress per course
     long countByEtudiantEmailAndLessonCoursIdAndTermineTrue(String email, Long courseId);
     List<Progress> findByEtudiantEmailAndLessonCoursIdAndTermineTrue(String email, Long courseId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(p) FROM Progress p WHERE p.termine = true AND p.lesson.cours.formateur.email = :email")
+    long countCompletedLessonsByTeacherEmail(String email);
+
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(l) FROM Enrollment e JOIN e.cours.lessons l WHERE e.cours.formateur.email = :email")
+    long countTotalPotentialLessonsByTeacherEmail(String email);
 }
