@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllUsers, deleteUser } from '../../api/adminApi';
+import { getAllUsers, deleteUser, updateUserRole } from '../../api/adminApi';
 
 const ROLE_META = {
   ROLE_ADMIN:   { label: 'Admin',      bg: '#fff1f2', color: '#e11d48', icon: '⚡' },
@@ -25,6 +25,7 @@ export default function ManageUsersPage() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [deletingId, setDeletingId] = useState(null);
+  const [updatingRoleId, setUpdatingRoleId] = useState(null);
 
   const fetchUsers = async () => {
     try {
@@ -52,6 +53,19 @@ export default function ManageUsersPage() {
       alert('Erreur lors de la suppression.');
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      setUpdatingRoleId(userId);
+      await updateUserRole(userId, newRole);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+    } catch (err) {
+      alert('Erreur lors du changement de rôle.');
+      console.error(err);
+    } finally {
+      setUpdatingRoleId(null);
     }
   };
 
@@ -185,14 +199,22 @@ export default function ManageUsersPage() {
                   <a href={`mailto:${user.email}`} className="mu-user-email">{user.email}</a>
                 </div>
 
-                {/* Role badge */}
-                <span
-                  className="mu-role-badge"
-                  style={{ background: role.bg, color: role.color }}
-                >
-                  {role.icon && <span>{role.icon}</span>}
-                  {role.label}
-                </span>
+                {/* Role select */}
+                <div className="mu-role-container">
+                  <select
+                    className="mu-role-select"
+                    value={user.role}
+                    onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                    disabled={updatingRoleId === user.id}
+                    title="Changer le rôle"
+                    style={{ background: role.bg, color: role.color }}
+                  >
+                    <option value="ROLE_STUDENT">📖 Étudiant</option>
+                    <option value="ROLE_TEACHER">🎓 Enseignant</option>
+                    <option value="ROLE_ADMIN">⚡ Admin</option>
+                  </select>
+                  {updatingRoleId === user.id && <span className="mu-role-spinner" />}
+                </div>
 
                 {/* Status */}
                 <span className={`mu-status ${user.actif ? 'mu-status--active' : 'mu-status--inactive'}`}>
@@ -450,17 +472,41 @@ const css = `
   }
   .mu-user-email:hover { color: var(--mu-rose); }
 
-  /* Role badge */
-  .mu-role-badge {
+  /* Role select */
+  .mu-role-container { position: relative; display: flex; align-items: center; }
+  .mu-role-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+    outline: none;
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    font-family: var(--mu-font);
     font-size: .71rem;
     font-weight: 700;
-    padding: 5px 12px;
+    padding: 5px 28px 5px 12px;
     border-radius: 100px;
     flex-shrink: 0;
     white-space: nowrap;
+    cursor: pointer;
+    transition: all .2s var(--mu-ease);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 10px;
+  }
+  .mu-role-select:hover { opacity: 0.85; transform: translateY(-1px); }
+  .mu-role-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .mu-role-spinner {
+    position: absolute;
+    right: -20px;
+    width: 12px; height: 12px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-top-color: var(--mu-rose);
+    border-radius: 50%;
+    animation: mu-spin .6s linear infinite;
   }
 
   /* Status */
