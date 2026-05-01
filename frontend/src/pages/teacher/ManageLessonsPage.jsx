@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getLessons, createLesson, updateLesson, deleteLesson, uploadFile, getQuiz, saveQuiz } from '../../api/teacherApi';
+import { getLessons, createLesson, updateLesson, deleteLesson, uploadFile, getQuiz, saveQuiz, getCourseQuiz, saveCourseQuiz } from '../../api/teacherApi';
 
 export default function ManageLessonsPage() {
   const { id } = useParams();
@@ -23,6 +23,7 @@ export default function ManageLessonsPage() {
   // Quiz State
   const [showQuizModal, setShowQuizModal] = useState(false);
   const [currentQuizLesson, setCurrentQuizLesson] = useState(null);
+  const [currentQuizCourse, setCurrentQuizCourse] = useState(null);
   const [quizLoading, setQuizLoading] = useState(false);
   const [quizSaving, setQuizSaving] = useState(false);
   const [quizData, setQuizData] = useState({
@@ -121,7 +122,38 @@ export default function ManageLessonsPage() {
   };
 
   // Quiz Functions
+  const handleOpenCourseQuiz = async () => {
+    setCurrentQuizLesson(null);
+    setCurrentQuizCourse(id);
+    setShowQuizModal(true);
+    setQuizLoading(true);
+    try {
+      const res = await getCourseQuiz(id);
+      if (res.data) {
+        setQuizData({
+          id: res.data.id,
+          titre: res.data.titre || 'Quiz Final du Cours',
+          dureeMinutes: res.data.dureeMinutes || 30,
+          scoreMinimum: res.data.scoreMinimum || 50,
+          questions: res.data.questions || []
+        });
+      } else {
+        setQuizData({
+          titre: 'Quiz Final du Cours',
+          dureeMinutes: 30,
+          scoreMinimum: 50,
+          questions: [{ enonce: '', optionA: '', optionB: '', optionC: '', optionD: '', reponseCorrecte: 'A' }]
+        });
+      }
+    } catch (err) {
+      console.error('Erreur quiz', err);
+    } finally {
+      setQuizLoading(false);
+    }
+  };
+
   const handleOpenQuiz = async (lesson) => {
+    setCurrentQuizCourse(null);
     setCurrentQuizLesson(lesson);
     setShowQuizModal(true);
     setQuizLoading(true);
@@ -172,7 +204,11 @@ export default function ManageLessonsPage() {
   const saveQuizData = async () => {
     setQuizSaving(true);
     try {
-      await saveQuiz(currentQuizLesson.id, quizData);
+      if (currentQuizCourse) {
+        await saveCourseQuiz(currentQuizCourse, quizData);
+      } else {
+        await saveQuiz(currentQuizLesson.id, quizData);
+      }
       setShowQuizModal(false);
       alert('Quiz enregistré avec succès !');
       fetchLessons();
@@ -349,6 +385,21 @@ export default function ManageLessonsPage() {
               )}
             </div>
           </div>
+          <div className="glass-panel mt-4 p-4 border-top border-primary border-4 shadow-lg fade-in-up">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="fw-bold mb-1 text-dark">Quiz Final du Cours</h5>
+                <p className="text-secondary small mb-0">Ce quiz sera proposé à l'étudiant une fois toutes les leçons terminées.</p>
+              </div>
+              <button 
+                onClick={handleOpenCourseQuiz} 
+                className="btn btn-premium rounded-pill px-4 shadow-sm hover-lift d-flex align-items-center gap-2"
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Gérer le Quiz Final
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -358,7 +409,7 @@ export default function ManageLessonsPage() {
           <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content border-0 shadow-lg rounded-4">
               <div className="modal-header border-0 p-4 pb-0">
-                <h5 className="modal-title fw-bold">Configuration du Quiz : {currentQuizLesson?.titre}</h5>
+                <h5 className="modal-title fw-bold">Configuration du Quiz : {currentQuizCourse ? 'Final' : currentQuizLesson?.titre}</h5>
                 <button type="button" className="btn-close" onClick={() => setShowQuizModal(false)}></button>
               </div>
               <div className="modal-body p-4">

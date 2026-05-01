@@ -18,6 +18,10 @@ public class CourseDetailDTO {
     private String imageUrl;
     private List<LessonDetailDTO> lessons;
     private int progressPercentage;
+    private boolean hasFinalQuiz;
+    private Long finalQuizId;
+    private boolean finalQuizPassed;
+    private boolean enrolled;
 
     @Data
     @Builder

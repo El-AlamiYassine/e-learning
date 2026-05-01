@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useGoogleLogin  } from '@react-oauth/google';
+import axios from 'axios';
 
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { login, user, setSessionFromResponse } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', motDePasse: '' });
   const [error, setError] = useState('');
@@ -41,6 +43,39 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+  const googleLogin = useGoogleLogin({
+    flow: 'implicit', // simple pour commencer
+    onSuccess: async (tokenResponse) => {
+      try {
+        const tokenToSend = tokenResponse.access_token || tokenResponse.credential;
+        if (!tokenToSend) {
+          console.error('Google token missing in tokenResponse:', tokenResponse);
+          setError('Jeton Google introuvable. Veuillez réessayer.');
+          return;
+        }
+
+        const res = await axios.post('http://localhost:8080/api/auth/google', {
+          token: tokenToSend,
+        });
+
+  if (setSessionFromResponse) setSessionFromResponse(res.data);
+  else login(res.data);
+
+      } catch (err) {
+        console.error('Google login error:', err);
+        // Prefer server-provided message when available
+        const serverMsg = err.response?.data?.message || err.response?.data || null;
+        if (serverMsg) {
+          setError(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg));
+        } else {
+          setError(err.message || 'Erreur connexion Google');
+        }
+      }
+    },
+    onError: () => {
+      setError("Connexion Google échouée");
+    },
+  });
 
   return (
     <div className="auth-wrapper">
@@ -123,18 +158,29 @@ export default function LoginPage() {
 
         <button
           type="button"
-          onClick={() => alert("Fonctionnalité 'Continuer avec Google' à venir !")}
-          className="btn w-100 py-3 d-flex align-items-center justify-content-center gap-2"
-          style={{ background: 'white', color: 'var(--text-dark)', border: '1.5px solid var(--border-light)', borderRadius: 'var(--radius-sm)', fontWeight: '600', transition: 'all 0.3s ease' }}
-          onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#f8fafc'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
-          onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.borderColor = 'var(--border-light)'; }}
+          onClick={() => googleLogin()}
+          className="btn w-100 py-3 d-flex align-items-center justify-content-center gap-3"
+          style={{
+            background: 'white',
+            border: '1.5px solid #e2e8f0',
+            borderRadius: '12px',
+            fontWeight: '600',
+            transition: 'all 0.25s ease',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = '#f8fafc';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = 'white';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
-            <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
-            <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4 16.318 4 9.656 8.337 6.306 14.691z"/>
-            <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.222 0-9.654-3.342-11.127-8.02l-6.6 5.064C9.554 39.882 16.273 44 24 44z"/>
-            <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z"/>
-          </svg>
+          <img
+            src="https://www.svgrepo.com/show/475656/google-color.svg"
+            alt="Google"
+            width="22"
+          />
           Continuer avec Google
         </button>
 

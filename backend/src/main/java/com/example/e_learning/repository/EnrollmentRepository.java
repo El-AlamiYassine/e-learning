@@ -18,4 +18,5 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     Double getTotalRevenueByTeacherEmail(String email);
 
     List<Enrollment> findByCoursFormateurEmailOrderByDateInscriptionAsc(String email);
+    java.util.Optional<com.example.e_learning.model.Enrollment> findByEtudiantEmailAndCoursId(String email, Long courseId);
 }

@@ -56,6 +56,16 @@ const studentApi = {
     const response = await axiosInstance.post(`/student/lessons/${lessonId}/quiz/submit`, answers);
     return response.data;
   },
+  
+  getCourseQuiz: async (courseId) => {
+    const response = await axiosInstance.get(`/student/courses/${courseId}/quiz`);
+    return response.data;
+  },
+
+  submitCourseQuiz: async (courseId, answers) => {
+    const response = await axiosInstance.post(`/student/courses/${courseId}/quiz/submit`, answers);
+    return response.data;
+  },
 
   getCertificate: async (courseId) => {
     const response = await axiosInstance.get(`/student/courses/${courseId}/certificate`);

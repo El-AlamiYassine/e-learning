@@ -169,14 +169,6 @@ export default function TeacherStudentsPage() {
                   <span className="ts-status-dot" />
                   {isActive ? 'Actif' : 'Inactif'}
                 </div>
-
-                {/* Action */}
-                <button className="ts-detail-btn">
-                  Détails
-                  <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
               </div>
             );
           })}

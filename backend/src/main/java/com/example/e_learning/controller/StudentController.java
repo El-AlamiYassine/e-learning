@@ -116,6 +116,24 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/courses/{courseId}/quiz")
+    public ResponseEntity<?> getCourseQuiz(@PathVariable Long courseId, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(studentService.getCourseQuiz(courseId, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/courses/{courseId}/quiz/submit")
+    public ResponseEntity<?> submitCourseQuiz(@PathVariable Long courseId, @RequestBody Map<Long, String> answers, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(studentService.submitCourseQuiz(courseId, answers, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/courses/{courseId}/certificate")
     public ResponseEntity<?> getCertificate(@PathVariable Long courseId, Authentication authentication) {
         try {

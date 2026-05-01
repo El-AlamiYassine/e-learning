@@ -315,5 +315,49 @@ public class TeacherController {
                 })
                 .orElse(ResponseEntity.status(403).build());
     }
+
+    @GetMapping("/courses/{courseId}/quiz")
+    public ResponseEntity<?> getCourseQuiz(@PathVariable Long courseId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        return courseRepository.findById(courseId)
+                .filter(course -> course.getFormateur().getEmail().equals(email))
+                .map(course -> {
+                    Quiz quiz = quizRepository.findByCoursId(courseId).orElse(null);
+                    return ResponseEntity.ok(quiz);
+                })
+                .orElse(ResponseEntity.status(403).build());
+    }
+
+    @PostMapping("/courses/{courseId}/quiz")
+    public ResponseEntity<?> saveCourseQuiz(@PathVariable Long courseId, @RequestBody Quiz quizRequest) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return courseRepository.findById(courseId)
+                .filter(course -> course.getFormateur().getEmail().equals(email))
+                .map(course -> {
+                    Quiz quiz = quizRepository.findByCoursId(courseId)
+                            .orElse(Quiz.builder().cours(course).build());
+                    
+                    quiz.setTitre(quizRequest.getTitre());
+                    quiz.setDureeMinutes(quizRequest.getDureeMinutes());
+                    quiz.setScoreMinimum(quizRequest.getScoreMinimum());
+                    
+                    Quiz savedQuiz = quizRepository.save(quiz);
+                    
+                    if (quiz.getQuestions() != null) {
+                        questionRepository.deleteAll(quiz.getQuestions());
+                    }
+                    
+                    if (quizRequest.getQuestions() != null) {
+                        quizRequest.getQuestions().forEach(q -> {
+                            q.setQuiz(savedQuiz);
+                            questionRepository.save(q);
+                        });
+                    }
+                    
+                    return ResponseEntity.ok(quizRepository.findById(savedQuiz.getId()).orElse(savedQuiz));
+                })
+                .orElse(ResponseEntity.status(403).build());
+    }
 }
 

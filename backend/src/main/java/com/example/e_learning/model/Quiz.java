@@ -35,9 +35,14 @@ public class Quiz {
     private Integer scoreMinimum = 50;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "lesson_id", unique = true)
+    @JoinColumn(name = "lesson_id", unique = true, nullable = true)
     @com.fasterxml.jackson.annotation.JsonIgnore
     private Lesson lesson;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", unique = true, nullable = true)
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    private Course cours;
 
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
     private List<Question> questions;

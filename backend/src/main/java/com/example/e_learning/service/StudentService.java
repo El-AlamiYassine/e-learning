@@ -123,6 +123,9 @@ public class StudentService {
                 .map(p -> p.getLesson().getId())
                 .collect(Collectors.toList());
 
+        Enrollment enrollment = enrollmentRepository.findByEtudiantEmailAndCoursId(email, courseId)
+                .orElse(null);
+
         List<CourseDetailDTO.LessonDetailDTO> lessonDTOs = lessons.stream()
                 .map(l -> {
                     List<CourseDetailDTO.DocumentDTO> docDTOs = null;
@@ -161,6 +164,10 @@ public class StudentService {
                 .imageUrl(course.getImageUrl())
                 .lessons(lessonDTOs)
                 .progressPercentage(progress)
+                .hasFinalQuiz(course.getFinalQuiz() != null)
+                .finalQuizId(course.getFinalQuiz() != null ? course.getFinalQuiz().getId() : null)
+                .finalQuizPassed(enrollment != null ? enrollment.getFinalQuizPassed() : false)
+                .enrolled(enrollment != null)
                 .build();
     }
 
@@ -212,6 +219,23 @@ public class StudentService {
         Quiz quiz = quizRepository.findByLessonId(lessonId)
                 .orElseThrow(() -> new RuntimeException("Quiz non trouvé pour cette leçon"));
 
+        return mapToQuizDTO(quiz);
+    }
+
+    public CourseDetailDTO.QuizDTO getCourseQuiz(Long courseId, String email) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
+        
+        Quiz quiz = quizRepository.findByCoursId(courseId)
+                .orElseThrow(() -> new RuntimeException("Quiz final non trouvé pour ce cours"));
+
+        // Optional: Check if all lessons are completed before allowing access
+        // (but we'll mostly check it during submission or just show it in UI)
+
+        return mapToQuizDTO(quiz);
+    }
+
+    private CourseDetailDTO.QuizDTO mapToQuizDTO(Quiz quiz) {
         List<CourseDetailDTO.QuestionDTO> questionDTOs = quiz.getQuestions().stream()
                 .map(q -> CourseDetailDTO.QuestionDTO.builder()
                         .id(q.getId())
@@ -220,7 +244,6 @@ public class StudentService {
                         .optionB(q.getOptionB())
                         .optionC(q.getOptionC())
                         .optionD(q.getOptionD())
-                        // Don't send the correct answer yet
                         .build())
                 .collect(Collectors.toList());
 
@@ -238,6 +261,33 @@ public class StudentService {
         Quiz quiz = quizRepository.findByLessonId(lessonId)
                 .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
 
+        Map<String, Object> results = calculateQuizResult(quiz, answers);
+        
+        if ((boolean) results.get("passed")) {
+            completeLesson(lessonId, email);
+        }
+
+        return results;
+    }
+
+    @Transactional
+    public Map<String, Object> submitCourseQuiz(Long courseId, Map<Long, String> answers, String email) {
+        Quiz quiz = quizRepository.findByCoursId(courseId)
+                .orElseThrow(() -> new RuntimeException("Quiz non trouvé"));
+
+        Map<String, Object> results = calculateQuizResult(quiz, answers);
+        
+        Enrollment enrollment = enrollmentRepository.findByEtudiantEmailAndCoursId(email, courseId)
+                .orElseThrow(() -> new RuntimeException("Inscription non trouvée"));
+
+        enrollment.setFinalQuizPassed((boolean) results.get("passed"));
+        enrollment.setFinalQuizScore((int) results.get("score"));
+        enrollmentRepository.save(enrollment);
+
+        return results;
+    }
+
+    private Map<String, Object> calculateQuizResult(Quiz quiz, Map<Long, String> answers) {
         List<Question> questions = quiz.getQuestions();
         int totalQuestions = questions.size();
         int correctCount = 0;
@@ -251,10 +301,6 @@ public class StudentService {
 
         int score = totalQuestions > 0 ? (correctCount * 100) / totalQuestions : 0;
         boolean passed = score >= quiz.getScoreMinimum();
-
-        if (passed) {
-            completeLesson(lessonId, email);
-        }
 
         return Map.of(
             "score", score,
@@ -302,6 +348,14 @@ public class StudentService {
         
         if (lessons.isEmpty() || completedCount < lessons.size()) {
             throw new RuntimeException("Le cours n'est pas encore terminé à 100%");
+        }
+
+        Enrollment enrollment = enrollmentRepository.findByEtudiantEmailAndCoursId(email, courseId)
+                .orElseThrow(() -> new RuntimeException("Inscription non trouvée"));
+
+        // Check final quiz if it exists
+        if (course.getFinalQuiz() != null && !enrollment.getFinalQuizPassed()) {
+            throw new RuntimeException("Vous devez réussir le quiz final pour obtenir le certificat");
         }
 
         Certificate certificate = certificateRepository.findByEtudiantEmailAndCoursId(email, courseId)

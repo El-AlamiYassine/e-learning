@@ -23,6 +23,20 @@ export const AuthProvider = ({ children }) => {
     else navigate('/student/dashboard');
   };
 
+  // Accept an AuthResponse-like object coming from social logins (Google)
+  const setSessionFromResponse = (resData) => {
+    if (!resData) return;
+    const { token, role, nom, prenom, email } = resData;
+    if (!token) return;
+
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify({ nom, prenom, email, role }));
+    setUser({ nom, prenom, email, role });
+    if (role === 'ROLE_ADMIN') navigate('/admin/dashboard');
+    else if (role === 'ROLE_TEACHER') navigate('/teacher/dashboard');
+    else navigate('/student/dashboard');
+  };
+
   const register = async (data) => {
     await registerApi(data);
     navigate('/login');
@@ -36,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout, setSessionFromResponse }}>
       {children}
     </AuthContext.Provider>
   );

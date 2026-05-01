@@ -6,6 +6,7 @@ import com.example.e_learning.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.example.e_learning.dto.GoogleRequest;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,6 +33,22 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(AuthResponse.builder().message(e.getMessage()).build());
+        }
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> loginGoogle(@RequestBody GoogleRequest request) {
+        try {
+            if (request == null || request.getToken() == null || request.getToken().isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(AuthResponse.builder().message("Token Google manquant ou invalide").build());
+            }
+
+            AuthResponse response = authService.loginWithGoogle(request.getToken());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(AuthResponse.builder().message(e.getMessage()).build());
         }
     }
 }

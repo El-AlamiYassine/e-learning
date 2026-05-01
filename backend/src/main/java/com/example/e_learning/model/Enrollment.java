@@ -41,4 +41,11 @@ public class Enrollment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course cours;
+
+    @Column(name = "final_quiz_passed")
+    @Builder.Default
+    private Boolean finalQuizPassed = false;
+
+    @Column(name = "final_quiz_score")
+    private Integer finalQuizScore;
 }
