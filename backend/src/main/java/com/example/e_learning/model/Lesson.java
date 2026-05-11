@@ -49,4 +49,8 @@ public class Lesson {
 
     @OneToOne(mappedBy = "lesson", cascade = CascadeType.ALL)
     private Quiz quiz;
+
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Progress> progresses;
 }

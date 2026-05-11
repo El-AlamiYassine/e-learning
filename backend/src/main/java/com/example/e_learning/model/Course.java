@@ -63,10 +63,18 @@ public class Course {
     @JoinColumn(name = "categorie_id")
     private Category categorie;
 
-    @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL,orphanRemoval = true)
     @JsonIgnore
     private List<Lesson> lessons;
     
     @OneToOne(mappedBy = "cours", cascade = CascadeType.ALL)
     private Quiz finalQuiz;
+
+    @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Enrollment> enrollments;
+
+    @OneToMany(mappedBy = "cours", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Certificate> certificates;
 }
