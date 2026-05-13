@@ -10,7 +10,7 @@ import com.example.e_learning.dto.GoogleRequest;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "http://localhost:*", allowedHeaders = "*", allowCredentials = "true")
 @RequiredArgsConstructor
 public class AuthController {
 
