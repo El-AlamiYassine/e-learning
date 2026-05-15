@@ -152,4 +152,14 @@ public class StudentController {
     public ResponseEntity<?> getAllEvents(Authentication authentication) {
         return ResponseEntity.ok(studentService.getStudentCalendarEvents(authentication.getName()));
     }
+
+    @GetMapping("/courses/{courseId}/lessons")
+    public ResponseEntity<?> getLessonsByCourse(@PathVariable Long courseId, Authentication authentication) {
+        try {
+            return ResponseEntity.ok(studentService.getLessonsByCourse(courseId, authentication.getName()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }

@@ -413,4 +413,36 @@ public class StudentService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    public List<CourseDetailDTO.LessonDetailDTO> getLessonsByCourse(Long courseId, String email) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Cours non trouvé"));
+        
+        // Verify student is enrolled in the course
+        boolean enrolled = enrollmentRepository.findByEtudiantEmail(email).stream()
+                .anyMatch(e -> e.getCours().getId().equals(courseId));
+        if (!enrolled) {
+            throw new RuntimeException("Vous n'êtes pas inscrit à ce cours");
+        }
+
+        List<Lesson> lessons = lessonRepository.findByCoursIdOrderByOrdreAsc(courseId);
+        List<Long> completedLessonIds = progressRepository.findByEtudiantEmailAndLessonCoursIdAndTermineTrue(email, courseId)
+                .stream()
+                .map(p -> p.getLesson().getId())
+                .collect(Collectors.toList());
+
+        return lessons.stream()
+                .map(l -> CourseDetailDTO.LessonDetailDTO.builder()
+                        .id(l.getId())
+                        .title(l.getTitre())
+                        .content(l.getContenu())
+                        .videoUrl(l.getVideoUrl())
+                        .ordre(l.getOrdre())
+                        .completed(completedLessonIds.contains(l.getId()))
+                        .hasQuiz(l.getQuiz() != null)
+                        .quizId(l.getQuiz() != null ? l.getQuiz().getId() : null)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
 }
