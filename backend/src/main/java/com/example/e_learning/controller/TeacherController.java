@@ -44,10 +44,10 @@ public class TeacherController {
         Double totalRevenue = enrollmentRepository.getTotalRevenueByTeacherEmail(email);
         if (totalRevenue == null) totalRevenue = 0.0;
 
-        // Monthly revenue for the last 12 months
+        // Monthly enrollments for the last 12 months
         List<Enrollment> enrollments = enrollmentRepository.findByCoursFormateurEmailOrderByDateInscriptionAsc(email);
         java.time.LocalDate now = java.time.LocalDate.now();
-        double[] monthlyRevenues = new double[12];
+        long[] monthlyEnrollments = new long[12];
         for (Enrollment e : enrollments) {
             java.time.LocalDateTime date = e.getDateInscription();
             if (date.isAfter(now.minusMonths(12).atStartOfDay())) {
@@ -57,7 +57,7 @@ public class TeacherController {
                 );
                 if (monthDiff >= 0 && monthDiff < 12) {
                     int index = 11 - monthDiff;
-                    monthlyRevenues[index] += (e.getCours().getPrix() != null ? e.getCours().getPrix() : 0.0);
+                    monthlyEnrollments[index] += 1;
                 }
             }
         }
@@ -88,7 +88,7 @@ public class TeacherController {
             "totalCourses", totalCourses,
             "totalStudents", totalStudents,
             "totalRevenue", totalRevenue,
-            "monthlyRevenues", monthlyRevenues,
+            "monthlyEnrollments", monthlyEnrollments,
             "engagement", engagement,
             "averageRating", Math.round(avgRating * 10.0) / 10.0,
             "totalReviews", totalReviews,
