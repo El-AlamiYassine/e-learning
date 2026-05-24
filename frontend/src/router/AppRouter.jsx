@@ -27,6 +27,7 @@ import ManageUsersPage from '../pages/admin/ManageUsersPage';
 import AddUserPage from '../pages/admin/AddUserPage';
 import ManageCoursesPage from '../pages/admin/ManageCoursesPage';
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
+import Chatbot from '../components/chatbot/Chatbot';
 
 import { useState, useEffect } from 'react';
 import MaintenancePage from '../pages/public/MaintenancePage';
@@ -71,6 +72,7 @@ export default function AppRouter() {
   }
 
   return (
+    <>
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
@@ -139,5 +141,7 @@ export default function AppRouter() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+      {user && <Chatbot />}
+    </>
   );
 }
