@@ -54,7 +54,7 @@ export default function LoginPage() {
           return;
         }
 
-        const res = await axios.post('http://localhost:8080/api/auth/google', {
+        const res = await axios.post('https://e-learning-psi-tawny.vercel.app/api/auth/google', {
           token: tokenToSend,
         });
 
