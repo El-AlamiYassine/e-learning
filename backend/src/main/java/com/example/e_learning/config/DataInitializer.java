@@ -23,8 +23,8 @@ public class DataInitializer {
                 admin.setNom("Admin");
                 admin.setPrenom("Admin");
                 admin.setEmail("admin@elearning.com");
-                admin.setPassword(passwordEncoder.encode("admin123"));
-                admin.setRole(Role.ADMIN);
+                admin.setMotDePasse(passwordEncoder.encode("admin123"));
+                admin.setRole(Role.ROLE_ADMIN);
 
                 userRepository.save(admin);
                 System.out.println("✅ Admin created");
@@ -36,8 +36,8 @@ public class DataInitializer {
                 prof.setNom("Prof");
                 prof.setPrenom("Prof");
                 prof.setEmail("prof@elearning.com");
-                prof.setPassword(passwordEncoder.encode("prof1234"));
-                prof.setRole(Role.TEACHER);
+                prof.setMotDePasse(passwordEncoder.encode("prof1234"));
+                prof.setRole(Role.ROLE_TEACHER);
 
                 userRepository.save(prof);
                 System.out.println("✅ Professor created");
