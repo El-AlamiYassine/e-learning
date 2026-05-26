@@ -23,4 +23,4 @@ export const getMaintenanceStatus = () => axios.get(`${API_URL}/settings/mainten
 export const updateMaintenanceStatus = (maintenanceMode) => axios.patch(`${API_URL}/settings/maintenance`, { maintenanceMode }, { headers: getAuthHeader() });
 
 // Public System
-export const checkPublicMaintenance = () => axios.get(`http://localhost:8080/api/system/maintenance-status`);
+export const checkPublicMaintenance = () => axios.get(`https://e-learning-production-9162.up.railway.app/api/system/maintenance-status`);
