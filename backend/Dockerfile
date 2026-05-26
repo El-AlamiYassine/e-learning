@@ -1,23 +1,24 @@
-# Multi-stage Dockerfile for building and running the Spring Boot backend
-# Build stage: use Maven to produce the jar
-FROM maven:3.8.8-eclipse-temurin-17 AS build
+# ======================
+# BUILD STAGE
+# ======================
+FROM maven:3.9.6-eclipse-temurin-17 AS build
+
 WORKDIR /workspace
 
-# Copy only what is needed for a cached Maven build
-COPY pom.xml mvnw .mvn/ ./
+COPY pom.xml .
 COPY src ./src
 
-# Run maven package (skip tests for faster builds by default)
-RUN mvn -B -DskipTests package
+RUN mvn clean package -DskipTests
 
-# Runtime stage
-FROM openjdk:17-jdk-slim
+# ======================
+# RUNTIME STAGE
+# ======================
+FROM eclipse-temurin:17-jre
+
 WORKDIR /app
 
-ARG JAR_FILE=target/*.jar
-COPY --from=build /workspace/target/*.jar /app/app.jar
+COPY --from=build /workspace/target/*.jar app.jar
 
 EXPOSE 8080
-ENV JAVA_OPTS=""
 
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
