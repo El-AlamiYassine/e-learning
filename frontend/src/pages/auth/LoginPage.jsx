@@ -54,7 +54,7 @@ export default function LoginPage() {
           return;
         }
 
-        const res = await axios.post('https://e-learning-psi-tawny.vercel.app/api/auth/google', {
+        const res = await axios.post('https://e-learning-production-9162.up.railway.app/api/auth/google', {
           token: tokenToSend,
         });
 
