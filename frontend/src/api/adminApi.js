@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/admin';
+const API_URL = 'https://e-learning-production-9162.up.railway.app/api/admin';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');

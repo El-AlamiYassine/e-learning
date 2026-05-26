@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'https://e-learning-production-9162.up.railway.app/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
