@@ -27,7 +27,9 @@ import ManageUsersPage from '../pages/admin/ManageUsersPage';
 import AddUserPage from '../pages/admin/AddUserPage';
 import ManageCoursesPage from '../pages/admin/ManageCoursesPage';
 import AdminSettingsPage from '../pages/admin/AdminSettingsPage';
+import AdminAnalyticsPage from '../pages/admin/AdminAnalyticsPage';
 import Chatbot from '../components/chatbot/Chatbot';
+import ProfilePage from '../pages/auth/ProfilePage';
 
 import { useState, useEffect } from 'react';
 import MaintenancePage from '../pages/public/MaintenancePage';
@@ -91,6 +93,7 @@ export default function AppRouter() {
         <Route path="certificates" element={<StudentCertificatesPage />} />
         <Route path="catalog" element={<CourseCatalogPage />} />
         <Route path="course/:id" element={<CourseDetailPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       <Route path="/student/lesson/:id" element={
@@ -120,6 +123,7 @@ export default function AppRouter() {
         <Route path="courses/:id/lessons" element={<ManageLessonsPage />} />
         <Route path="students" element={<TeacherStudentsPage />} />
         <Route path="analytics" element={<TeacherAnalyticsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         {/* Redirect /teacher to /teacher/dashboard */}
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
@@ -135,6 +139,8 @@ export default function AppRouter() {
         <Route path="users/add" element={<AddUserPage />} />
         <Route path="courses" element={<ManageCoursesPage />} />
         <Route path="settings" element={<AdminSettingsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
         {/* Redirect /admin to /admin/dashboard */}
         <Route index element={<Navigate to="dashboard" replace />} />
       </Route>
